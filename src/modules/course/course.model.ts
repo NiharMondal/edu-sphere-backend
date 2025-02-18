@@ -23,6 +23,12 @@ const courseSchema = new Schema<ICourse>(
 			type: String,
 			required: [true, "Description is required"],
 		},
+		modules: [
+			{
+				type: Schema.Types.ObjectId,
+				ref: "Module",
+			},
+		],
 	},
 	{ timestamps: true }
 );
