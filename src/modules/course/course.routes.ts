@@ -1,5 +1,7 @@
 import { Router } from "express";
 import { courseController } from "./course.controller";
+import { courseValidation } from "./course.validation";
+import { validateRequest } from "../../middleware/validateRequest";
 
 const router = Router();
 
@@ -16,9 +18,13 @@ router.get("/slug/:slug", courseController.getBySlug);
 router.get("/:id", courseController.getById);
 
 // create and get-all-doc
+// only admin can create course
 router
 	.route("/")
-	.post(courseController.createIntoDB)
+	.post(
+		validateRequest(courseValidation.createCourse),
+		courseController.createIntoDB
+	)
 	.get(courseController.getAllFromDB);
 
 export const courseRoute = router;

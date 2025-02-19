@@ -26,7 +26,7 @@ moduleSchema.pre("save", async function (next) {
 
 	const Module = model("Module"); // Get the Module model
 	const lastModule = await Module.findOne({ course: this.course }) // Find the last module in the course
-		.sort("-index") // Sort in descending order
+		.sort("-index")
 		.select("index");
 
 	this.index = lastModule ? lastModule.index + 1 : 1; // Increment index

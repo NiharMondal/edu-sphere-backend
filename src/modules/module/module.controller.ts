@@ -34,16 +34,6 @@ const getById = asyncHandler(async (req: Request, res: Response) => {
 	});
 });
 
-const getBySlug = asyncHandler(async (req: Request, res: Response) => {
-	const result = await moduleServices.getBySlug(req.params.slug);
-
-	sendResponse(res, {
-		statusCode: 200,
-		message: "Module fetched successfully",
-		result: result,
-	});
-});
-
 const updateDoc = asyncHandler(async (req: Request, res: Response) => {
 	const { id } = req.params;
 	const result = await moduleServices.updateDoc(id, req.body);
@@ -69,7 +59,7 @@ export const moduleController = {
 	createIntoDB,
 	getAllFromDB,
 	getById,
-	getBySlug,
+
 	updateDoc,
 	deleteDoc,
 };

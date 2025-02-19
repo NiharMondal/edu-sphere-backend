@@ -16,7 +16,12 @@ const createIntoDB = async (payload: ICourse) => {
 };
 
 const getAllFromDB = async () => {
-	const data = await Course.find();
+	const data = await Course.find().populate({
+		path: "modules",
+		populate: {
+			path: "lectures",
+		},
+	});
 
 	return data;
 };

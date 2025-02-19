@@ -1,6 +1,6 @@
-import { generateSlug } from "../../utils";
 import CustomError from "../../utils/CustomError";
 import { Course } from "../course/course.model";
+import { Lecture } from "../lecture/lecture.model";
 import { IModule } from "./module.interface";
 import { Module } from "./module.model";
 
@@ -38,21 +38,15 @@ const createIntoDB = async (courseId: string, payload: IModule) => {
 };
 
 const getAllFromDB = async () => {
-	const data = await Module.find();
+	const data = await Module.find().populate({
+		path: "lectures",
+	});
 
 	return data;
 };
 
 const getById = async (id: string) => {
-	const data = await Module.findById(id);
-	if (!data) {
-		throw new CustomError(404, "Module not found!");
-	}
-	return data;
-};
-
-const getBySlug = async (slug: string) => {
-	const data = await Module.findOne({ slug });
+	const data = await Module.findById(id).populate({ path: "lectures" });
 	if (!data) {
 		throw new CustomError(404, "Module not found!");
 	}
@@ -60,17 +54,16 @@ const getBySlug = async (slug: string) => {
 };
 
 const updateDoc = async (id: string, payload: Partial<IModule>) => {
-	const res = await Module.findById(id);
-	if (!res) {
+	const module = await Module.findById(id);
+	if (!module) {
 		throw new CustomError(404, "Module not found!");
 	}
-	const slug = generateSlug(payload?.title as string);
+
 	const data = await Module.findByIdAndUpdate(
 		{ _id: id },
 		{
 			$set: {
 				...payload,
-				slug: slug,
 			},
 		},
 		{ new: true, runValidators: true }
@@ -84,6 +77,13 @@ const deleteDoc = async (id: string) => {
 	if (!res) {
 		throw new CustomError(404, "Module not found!");
 	}
+
+	//delete lectures based on module id
+	await Lecture.deleteMany({ module: id }); // id refers to module id
+	//updating course module array
+	await Course.findByIdAndUpdate(res.course, { $pull: { modules: id } });
+
+	//deleting module
 	const data = await Module.findByIdAndDelete(id);
 
 	return data;
@@ -93,7 +93,7 @@ export const moduleServices = {
 	createIntoDB,
 	getAllFromDB,
 	getById,
-	getBySlug,
+
 	updateDoc,
 	deleteDoc,
 };
