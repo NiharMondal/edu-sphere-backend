@@ -1,5 +1,5 @@
 import jwt, { JwtPayload } from "jsonwebtoken";
-import { envConfig } from "../config";
+import { envConfig } from "../config/index";
 import slugify from "slugify";
 
 export const generateToken = (payload: JwtPayload) => {
