@@ -38,8 +38,9 @@ const createIntoDB = async (moduleId: string, payload: ILecture) => {
 	return data;
 };
 
-const getAllFromDB = async () => {
-	const data = await Lecture.find();
+const getAllFromDB = async (query: Record<string, string>) => {
+	const { search } = query;
+	const data = await Lecture.find().populate("module", "title");
 
 	return data;
 };

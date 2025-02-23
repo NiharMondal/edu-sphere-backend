@@ -37,12 +37,20 @@ const createIntoDB = async (courseId: string, payload: IModule) => {
 	return data;
 };
 
-const getAllFromDB = async () => {
-	const data = await Module.find().populate({
-		path: "lectures",
-	});
+const getAllFromDB = async (query: Record<string, string>) => {
+	const { search } = query;
 
-	return data;
+	const modules = await Module.find()
+		.populate({
+			path: "course",
+			select: "title",
+		})
+		.populate({
+			path: "lectures",
+		})
+		.sort({ createdat: "desc" });
+
+	return modules;
 };
 
 const getById = async (id: string) => {

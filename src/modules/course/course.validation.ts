@@ -1,7 +1,10 @@
 import { z } from "zod";
 
 const createCourse = z.object({
-	thumbnail: z.string({ required_error: "Thumbnail is required" }).trim(),
+	thumbnail: z
+		.string({ required_error: "Thumbnail is required" })
+		.url({ message: "Provide a valid URL" })
+		.trim(),
 	title: z
 		.string({ required_error: "Course title is required" })
 		.min(5, "Min characters should be 5")

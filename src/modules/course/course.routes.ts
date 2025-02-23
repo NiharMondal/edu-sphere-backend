@@ -18,13 +18,13 @@ router.get("/slug/:slug", courseController.getBySlug);
 router.get("/:id", courseController.getById);
 
 // create and get-all-doc
-// only admin can create course
+
 router
 	.route("/")
 	.post(
 		validateRequest(courseValidation.createCourse),
 		courseController.createIntoDB
-	)
+	) // only admin can create course
 	.get(courseController.getAllFromDB);
 
 export const courseRoute = router;

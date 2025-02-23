@@ -1,5 +1,7 @@
 import { generateSlug } from "../../utils";
 import CustomError from "../../utils/CustomError";
+import { Lecture } from "../lecture/lecture.model";
+import { Module } from "../module/module.model";
 import { ICourse } from "./course.interface";
 import { Course } from "./course.model";
 
@@ -27,7 +29,7 @@ const getAllFromDB = async () => {
 };
 
 const getById = async (id: string) => {
-	const data = await Course.findById(id);
+	const data = await Course.findById(id).populate({ path: "modules" });
 	if (!data) {
 		throw new CustomError(404, "Course not found!");
 	}
@@ -35,7 +37,10 @@ const getById = async (id: string) => {
 };
 
 const getBySlug = async (slug: string) => {
-	const data = await Course.findOne({ slug });
+	const data = await Course.findOne({ slug }).populate({
+		path: "modules",
+		select: "title",
+	});
 	if (!data) {
 		throw new CustomError(404, "Course not found!");
 	}
@@ -63,10 +68,17 @@ const updateDoc = async (id: string, payload: Partial<ICourse>) => {
 };
 
 const deleteDoc = async (id: string) => {
-	const res = await Course.findById(id);
-	if (!res) {
+	const course = await Course.findById(id);
+	if (!course) {
 		throw new CustomError(404, "Course not found!");
 	}
+
+	const module = await Module.find({ course: id });
+	module.forEach(
+		async (val) => await Lecture.deleteMany({ module: val._id })
+	);
+	await Lecture.deleteMany({ module: module });
+	await Module.deleteMany({ course: id });
 	const data = await Course.findByIdAndDelete(id);
 
 	return data;

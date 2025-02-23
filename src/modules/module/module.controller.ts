@@ -15,7 +15,7 @@ const createIntoDB = asyncHandler(async (req: Request, res: Response) => {
 });
 
 const getAllFromDB = asyncHandler(async (req: Request, res: Response) => {
-	const result = await moduleServices.getAllFromDB();
+	const result = await moduleServices.getAllFromDB(req.query as {});
 
 	sendResponse(res, {
 		statusCode: 200,
