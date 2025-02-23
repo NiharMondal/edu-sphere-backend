@@ -16,6 +16,7 @@ app.use(
 			"https://learn-management-system-mu.vercel.app",
 			"http://localhost:3000",
 		],
+		credentials: true,
 	})
 );
 
