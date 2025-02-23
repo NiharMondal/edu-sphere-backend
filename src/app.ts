@@ -12,8 +12,10 @@ app.use(express.json());
 
 app.use(
 	cors({
-		origin: ["https://trip-mate-sigma.vercel.app", "http://localhost:3000"],
-		credentials: true,
+		origin: [
+			"https://learn-management-system-mu.vercel.app",
+			"http://localhost:3000",
+		],
 	})
 );
 
