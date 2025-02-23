@@ -13,6 +13,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.courseServices = void 0;
+const QueryBuilder_1 = __importDefault(require("../../lib/QueryBuilder"));
 const utils_1 = require("../../utils");
 const CustomError_1 = __importDefault(require("../../utils/CustomError"));
 const lecture_model_1 = require("../lecture/lecture.model");
@@ -27,14 +28,15 @@ const createIntoDB = (payload) => __awaiter(void 0, void 0, void 0, function* ()
     const data = yield course_model_1.Course.create(Object.assign(Object.assign({}, payload), { slug: slug }));
     return data;
 });
-const getAllFromDB = () => __awaiter(void 0, void 0, void 0, function* () {
-    const data = yield course_model_1.Course.find().populate({
+const getAllFromDB = (query) => __awaiter(void 0, void 0, void 0, function* () {
+    const res = new QueryBuilder_1.default(course_model_1.Course.find(), query).search(["title"]);
+    const courses = yield res.queryModel.populate({
         path: "modules",
         populate: {
             path: "lectures",
         },
     });
-    return data;
+    return courses;
 });
 const getById = (id) => __awaiter(void 0, void 0, void 0, function* () {
     const data = yield course_model_1.Course.findById(id).populate({ path: "modules" });

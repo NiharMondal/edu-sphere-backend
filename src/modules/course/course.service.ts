@@ -1,3 +1,4 @@
+import QueryBuilder from "../../lib/QueryBuilder";
 import { generateSlug } from "../../utils";
 import CustomError from "../../utils/CustomError";
 import { Lecture } from "../lecture/lecture.model";
@@ -17,15 +18,17 @@ const createIntoDB = async (payload: ICourse) => {
 	return data;
 };
 
-const getAllFromDB = async () => {
-	const data = await Course.find().populate({
+const getAllFromDB = async (
+	query: Record<string, string | string[] | undefined>
+) => {
+	const res = new QueryBuilder(Course.find(), query).search(["title"]);
+	const courses = await res.queryModel.populate({
 		path: "modules",
 		populate: {
 			path: "lectures",
 		},
 	});
-
-	return data;
+	return courses;
 };
 
 const getById = async (id: string) => {

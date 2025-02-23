@@ -25,7 +25,7 @@ const createIntoDB = (0, asyncHandler_1.default)((req, res) => __awaiter(void 0,
     });
 }));
 const getAllFromDB = (0, asyncHandler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const result = yield course_service_1.courseServices.getAllFromDB();
+    const result = yield course_service_1.courseServices.getAllFromDB(req.query);
     (0, sendResponse_1.default)(res, {
         statusCode: 200,
         message: "Course fetched successfully",
