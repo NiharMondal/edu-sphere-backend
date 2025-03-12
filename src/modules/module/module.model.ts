@@ -9,7 +9,7 @@ const moduleSchema = new Schema<IModule>(
 		},
 		index: {
 			type: Number,
-			default: 1,
+			default: 1, // auto-incremented
 		},
 		course: {
 			type: Schema.Types.ObjectId,

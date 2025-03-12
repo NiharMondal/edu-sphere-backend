@@ -11,13 +11,18 @@ const lectureSchema = new Schema<ILecture>(
 			type: String,
 			enum: ["video", "text", "pdf"],
 		},
+		videoUrl: {
+			type: String,
+		},
+		attachments: [
+			{
+				type: String,
+			},
+		],
 		module: {
 			type: Schema.Types.ObjectId,
+			required: [true, "Module ID is required"],
 			ref: "Module",
-		},
-		url: {
-			type: String,
-			required: [true, "Url is required"],
 		},
 	},
 	{ timestamps: true }

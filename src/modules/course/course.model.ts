@@ -3,30 +3,42 @@ import { ICourse } from "./course.interface";
 
 const courseSchema = new Schema<ICourse>(
 	{
-		thumbnail: {
-			type: String,
-			required: [true, "Thumbnail is required"],
-		},
 		title: {
 			type: String,
 			required: [true, "Course title is required"],
-		},
-		price: {
-			type: Number,
-			required: [true, "Price is required"],
+			unique: [true, "Course title should be unique"],
 		},
 		slug: {
 			type: String,
-			unique: true,
+		},
+		thumbnail: {
+			type: String,
+			required: [true, "Thumbnail is required"],
 		},
 		description: {
 			type: String,
 			required: [true, "Description is required"],
 		},
+		price: {
+			type: Number,
+			required: [true, "Price is required"],
+		},
+
+		instructor: {
+			type: Schema.Types.ObjectId,
+			ref: "User",
+		},
 		modules: [
 			{
 				type: Schema.Types.ObjectId,
 				ref: "Module",
+			},
+		],
+
+		students: [
+			{
+				type: Schema.Types.ObjectId,
+				ref: "User",
 			},
 		],
 	},
