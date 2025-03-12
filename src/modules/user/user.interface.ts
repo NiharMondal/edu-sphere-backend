@@ -7,4 +7,5 @@ export interface IUser {
 	role: string;
 	enrolledCourses: Types.ObjectId;
 	createdCourses: Types.ObjectId;
+	isDeleted: boolean;
 }

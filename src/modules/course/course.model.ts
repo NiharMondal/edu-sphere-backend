@@ -27,6 +27,7 @@ const courseSchema = new Schema<ICourse>(
 		instructor: {
 			type: Schema.Types.ObjectId,
 			ref: "User",
+			required: [true, "Instructor ID is required"],
 		},
 		modules: [
 			{

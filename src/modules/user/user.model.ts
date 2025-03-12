@@ -35,6 +35,10 @@ const userSchema = new Schema<IUser>(
 				ref: "Course",
 			},
 		],
+		isDeleted: {
+			type: Boolean,
+			default: false,
+		},
 	},
 	{ timestamps: true }
 );
