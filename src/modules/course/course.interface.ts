@@ -9,4 +9,5 @@ export interface ICourse {
 	instructor: Types.ObjectId;
 	modules: Types.ObjectId;
 	students: Types.ObjectId;
+	isDeleted: boolean;
 }

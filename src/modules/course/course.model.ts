@@ -24,6 +24,10 @@ const courseSchema = new Schema<ICourse>(
 			required: [true, "Price is required"],
 		},
 
+		isDeleted: {
+			type: Boolean,
+			default: false,
+		},
 		instructor: {
 			type: Schema.Types.ObjectId,
 			ref: "User",

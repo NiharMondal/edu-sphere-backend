@@ -6,17 +6,30 @@ const moduleSchema = new Schema<IModule>(
 		title: {
 			type: String,
 			required: [true, "Module name is required"],
+			unique: [true, "Module title should be unique"],
+		},
+		slug: {
+			type: String,
 		},
 		index: {
 			type: Number,
 			default: 1, // auto-incremented
+		},
+		isDeleted: {
+			type: Boolean,
+			default: false,
 		},
 		course: {
 			type: Schema.Types.ObjectId,
 			required: [true, "Course ID is required"],
 			ref: "Course",
 		},
-		lectures: [{ type: Schema.Types.ObjectId, ref: "Lecture" }],
+		lectures: [
+			{
+				type: Schema.Types.ObjectId,
+				ref: "Lecture",
+			},
+		],
 	},
 	{ timestamps: true }
 );

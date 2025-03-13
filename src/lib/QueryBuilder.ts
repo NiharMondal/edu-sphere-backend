@@ -16,7 +16,7 @@ class QueryBuilder<T> {
 		const queryCopy = { ...this.query };
 		queryCopy["isDeleted"] = false;
 
-		const exludedFields = [
+		const excludedFields = [
 			"search",
 			"page",
 			"limit",
@@ -28,7 +28,7 @@ class QueryBuilder<T> {
 		];
 
 		// deleting item from main query
-		exludedFields.forEach((field) => delete queryCopy[field]);
+		excludedFields.forEach((field) => delete queryCopy[field]);
 
 		if (this.query) {
 			this.queryModel = this.queryModel.find(queryCopy);
@@ -66,7 +66,7 @@ class QueryBuilder<T> {
 	sort() {
 		const sortBy = this.query?.sortBy || "createdAt";
 		const order = this.query?.order || "desc";
-		const sortOrder = order === "asc" ? 1 : -1; // Determine sort order (default to decending)
+		const sortOrder = order === "asc" ? 1 : -1; // Determine sort order (default to descending)
 
 		// Validate the sortBy field to ensure it's a valid key
 		const validSortFields = [
@@ -107,7 +107,6 @@ class QueryBuilder<T> {
 		}
 		return this;
 	}
-
 	async countTotal() {
 		const queries = this.queryModel.getFilter();
 

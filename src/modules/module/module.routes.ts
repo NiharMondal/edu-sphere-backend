@@ -7,7 +7,7 @@ const router = Router();
 
 //create module - only admin can create module
 router.post(
-	"/course/:courseId/create",
+	"/:courseId/create",
 	validateRequest(moduleValidation.createModule),
 	moduleController.createIntoDB
 );

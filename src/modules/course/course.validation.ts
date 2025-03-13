@@ -17,7 +17,7 @@ const createCourse = z.object({
 	description: z
 		.string({ required_error: "Description is required" })
 		.min(20, "Min characters should be 20")
-		.max(200, "Max character is 200")
+		.max(500, "Max character is 500")
 		.trim(),
 	instructor: z.string({ required_error: "Instructor is is missing" }).trim(),
 });

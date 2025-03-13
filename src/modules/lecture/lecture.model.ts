@@ -7,6 +7,9 @@ const lectureSchema = new Schema<ILecture>(
 			type: String,
 			required: [true, "Lecture title is required"],
 		},
+		slug: {
+			type: String,
+		},
 		type: {
 			type: String,
 			enum: ["video", "text", "pdf"],
@@ -23,6 +26,10 @@ const lectureSchema = new Schema<ILecture>(
 			type: Schema.Types.ObjectId,
 			required: [true, "Module ID is required"],
 			ref: "Module",
+		},
+		isDeleted: {
+			type: Boolean,
+			default: false,
 		},
 	},
 	{ timestamps: true }
