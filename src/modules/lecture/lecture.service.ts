@@ -1,3 +1,4 @@
+import mongoose from "mongoose";
 import { generateSlug } from "../../utils";
 import CustomError from "../../utils/CustomError";
 import { Course } from "../course/course.model";
@@ -22,20 +23,45 @@ const createIntoDB = async (moduleId: string, payload: ILecture) => {
 		throw new CustomError(302, "Lecture title is already exist!");
 	}
 
-	//actual data
-	const data = await Lecture.create(payload);
+	const session = await mongoose.startSession();
+	session.startTransaction();
 
-	//updating course collection
-	await Module.findOneAndUpdate(
-		{ _id: moduleId },
-		{
-			$push: {
-				lectures: data._id,
+	try {
+		const slug = generateSlug(payload.title);
+		const newLecture = new Lecture({ ...payload, slug });
+		await newLecture.save({ session }); // first transaction -> create lecture
+
+		//second tran -> update module collection
+		const updateModule = await Module.findOneAndUpdate(
+			{ _id: moduleId },
+			{
+				$push: {
+					lectures: newLecture._id,
+				},
 			},
-		}
-	);
+			{ new: true }
+		).session(session);
 
-	return data;
+		if (!updateModule) {
+			await session.abortTransaction();
+			session.endSession();
+			throw new CustomError(
+				400,
+				"Failed to update module with new lecture"
+			);
+		}
+
+		//commit session
+		await session.commitTransaction();
+		session.endSession();
+
+		return newLecture;
+	} catch (error) {
+		await session.abortTransaction();
+		session.endSession();
+
+		throw new CustomError(500, "Could not create lecture");
+	}
 };
 
 const getAllFromDB = async (query: Record<string, string>) => {

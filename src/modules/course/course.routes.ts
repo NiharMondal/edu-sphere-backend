@@ -12,19 +12,18 @@ router
 	.delete(courseController.deleteDoc);
 
 //find by slug
-router.get("/slug/:slug", courseController.getBySlug);
+router.get("/by-slug/:slug", courseController.getBySlug);
 
 //find by ID
 router.get("/:id", courseController.getById);
 
 // create and get-all-doc
-
 router
 	.route("/")
 	.post(
-		validateRequest(courseValidation.createCourse),
+		validateRequest(courseValidation.createCourse), // only admin and instructors can create course
 		courseController.createIntoDB
-	) // only admin can create course
+	)
 	.get(courseController.getAllFromDB);
 
 export const courseRoute = router;

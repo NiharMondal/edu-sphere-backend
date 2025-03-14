@@ -1,3 +1,4 @@
+import mongoose from "mongoose";
 import QueryBuilder from "../../lib/QueryBuilder";
 import { generateSlug } from "../../utils";
 import CustomError from "../../utils/CustomError";
@@ -12,7 +13,7 @@ const createIntoDB = async (payload: ICourse) => {
 		throw new CustomError(302, "Course title is already exist!");
 	}
 
-	const slug = generateSlug(payload?.title);
+	const slug = generateSlug(payload.title);
 	const data = await Course.create({ ...payload, slug: slug });
 
 	return data;
@@ -21,7 +22,9 @@ const createIntoDB = async (payload: ICourse) => {
 const getAllFromDB = async (
 	query: Record<string, string | string[] | undefined>
 ) => {
-	const res = new QueryBuilder(Course.find(), query).search(["title"]);
+	const res = new QueryBuilder(Course.find(), query)
+		.search(["title"])
+		.filter();
 	const courses = await res.queryModel.populate({
 		path: "modules",
 		populate: {
@@ -55,7 +58,8 @@ const updateDoc = async (id: string, payload: Partial<ICourse>) => {
 	if (!res) {
 		throw new CustomError(404, "Course not found!");
 	}
-	const slug = generateSlug(payload?.title as string);
+	const slug = generateSlug(payload.title as string);
+
 	const data = await Course.findByIdAndUpdate(
 		{ _id: id },
 		{
@@ -71,20 +75,64 @@ const updateDoc = async (id: string, payload: Partial<ICourse>) => {
 };
 
 const deleteDoc = async (id: string) => {
-	const course = await Course.findById(id);
-	if (!course) {
-		throw new CustomError(404, "Course not found!");
+	// start session
+	const session = await mongoose.startSession();
+	session.startTransaction();
+
+	try {
+		//first transaction -> find course
+		const course = await Course.findById(id).session(session);
+		if (!course) {
+			await session.abortTransaction();
+			session.endSession();
+			throw new CustomError(404, "Course not found!");
+		}
+
+		//second transaction -> find all modules
+		const modules = await Module.find({ course: id }).session(session);
+		const moduleIds = modules.map((module) => module._id);
+
+		// third transaction -> Delete all lectures
+		await Lecture.updateMany(
+			{ module: { $in: moduleIds } },
+			{
+				$set: {
+					isDeleted: true,
+				},
+			}
+		).session(session);
+
+		// forth transaction -> Delete all modules
+		await Module.updateMany(
+			{ course: { $in: id } },
+			{
+				$set: {
+					isDeleted: true,
+				},
+			}
+		).session(session);
+
+		// fifth transaction -> Delete course itself
+		const res = await Course.findByIdAndUpdate(
+			{ _id: id },
+			{
+				$set: {
+					isDeleted: true,
+				},
+			},
+			{ new: true }
+		).session(session);
+
+		//commit transaction
+		await session.commitTransaction();
+		session.endSession();
+
+		return res;
+	} catch (error) {
+		await session.abortTransaction();
+		await session.endSession();
+		throw new CustomError(400, "Could not delete course");
 	}
-
-	const module = await Module.find({ course: id });
-	module.forEach(
-		async (val) => await Lecture.deleteMany({ module: val._id })
-	);
-	await Lecture.deleteMany({ module: module });
-	await Module.deleteMany({ course: id });
-	const data = await Course.findByIdAndDelete(id);
-
-	return data;
 };
 
 export const courseServices = {

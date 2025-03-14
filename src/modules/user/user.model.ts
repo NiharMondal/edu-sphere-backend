@@ -13,13 +13,31 @@ const userSchema = new Schema<IUser>(
 			type: String,
 			required: [true, "Email is required"],
 		},
-		role: {
-			type: String,
-			default: "user",
-		},
 		password: {
 			type: String,
 			required: [true, "Password is required"],
+		},
+		role: {
+			type: String,
+			enum: ["student", "instructor", "admin"],
+			default: "student",
+		},
+
+		enrolledCourses: [
+			{
+				type: Schema.Types.ObjectId,
+				ref: "Enrollment",
+			},
+		],
+		createdCourses: [
+			{
+				type: Schema.Types.ObjectId,
+				ref: "Course",
+			},
+		],
+		isDeleted: {
+			type: Boolean,
+			default: false,
 		},
 	},
 	{ timestamps: true }

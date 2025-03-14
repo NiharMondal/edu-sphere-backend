@@ -5,7 +5,7 @@ import { moduleRoute } from "../modules/module/module.routes";
 
 export const routesArray = [
 	{ path: "/auth", route: authRoute },
-	{ path: "/course", route: courseRoute },
-	{ path: "/module", route: moduleRoute },
-	{ path: "/lecture", route: lectureRoute },
+	{ path: "/courses", route: courseRoute },
+	{ path: "/modules", route: moduleRoute },
+	{ path: "/lectures", route: lectureRoute },
 ];

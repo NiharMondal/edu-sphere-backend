@@ -2,7 +2,10 @@ import { Types } from "mongoose";
 
 export interface ILecture {
 	title: string;
+	slug: string;
+	videoUrl: string;
 	type: string;
 	module: Types.ObjectId;
-	url: string;
+	attachments: string;
+	isDeleted: boolean;
 }

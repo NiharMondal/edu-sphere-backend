@@ -7,7 +7,7 @@ const router = Router();
 
 //only admin can create lecture
 router.post(
-	"/module/:moduleId/create",
+	"/:moduleId/create",
 	validateRequest(lectureValidation.createLecture),
 	lectureController.createIntoDB
 );

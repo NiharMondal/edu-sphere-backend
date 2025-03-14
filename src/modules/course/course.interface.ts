@@ -1,10 +1,13 @@
 import { Types } from "mongoose";
 
 export interface ICourse {
-	thumbnail: string;
 	title: string;
-	price: number;
 	slug: string;
+	thumbnail: string;
 	description: string;
+	price: number;
+	instructor: Types.ObjectId;
 	modules: Types.ObjectId;
+	students: Types.ObjectId;
+	isDeleted: boolean;
 }

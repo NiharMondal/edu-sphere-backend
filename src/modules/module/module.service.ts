@@ -1,8 +1,10 @@
+import mongoose from "mongoose";
 import CustomError from "../../utils/CustomError";
 import { Course } from "../course/course.model";
 import { Lecture } from "../lecture/lecture.model";
 import { IModule } from "./module.interface";
 import { Module } from "./module.model";
+import { generateSlug } from "../../utils";
 
 const createIntoDB = async (courseId: string, payload: IModule) => {
 	// double checking by courseId and params
@@ -15,26 +17,56 @@ const createIntoDB = async (courseId: string, payload: IModule) => {
 	}
 
 	// checking module exist or not
-	const existedModule = await Module.findOne({ title: payload.title });
+	const existedModule = await Module.findOne({
+		title: payload.title,
+		course: courseId,
+	});
 
 	if (existedModule) {
 		throw new CustomError(302, "Module title is already exist!");
 	}
 
-	//actual data
-	const data = await Module.create(payload);
+	const session = await mongoose.startSession();
+	session.startTransaction();
 
-	//updating course collection
-	await Course.findOneAndUpdate(
-		{ _id: courseId },
-		{
-			$push: {
-				modules: data._id,
+	try {
+		//first transaction -> creating module
+		const slug = generateSlug(payload.title); //generating slug
+		const newModule = new Module({ ...payload, slug });
+		await newModule.save({ session });
+
+		//second transaction -> updating course collection
+		const updateResult = await Course.findOneAndUpdate(
+			{ _id: courseId },
+			{
+				$push: {
+					modules: newModule._id,
+				},
 			},
-		}
-	);
+			{ session, new: true }
+		);
 
-	return data;
+		// If course update failed, abort transaction
+		if (!updateResult) {
+			await session.abortTransaction();
+			session.endSession();
+			throw new CustomError(
+				400,
+				"Failed to update course with new module"
+			);
+		}
+
+		//commit session
+		await session.commitTransaction();
+		session.endSession();
+
+		return newModule;
+	} catch (error) {
+		await session.abortTransaction();
+		session.endSession();
+		console.log(error);
+		throw new CustomError(500, "Could not create module");
+	}
 };
 
 const getAllFromDB = async (query: Record<string, string>) => {
@@ -48,7 +80,7 @@ const getAllFromDB = async (query: Record<string, string>) => {
 		.populate({
 			path: "lectures",
 		})
-		.sort({ createdat: "desc" });
+		.sort({ createdAt: "desc" });
 
 	return modules;
 };
