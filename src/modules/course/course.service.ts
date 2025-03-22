@@ -6,11 +6,22 @@ import { Lecture } from "../lecture/lecture.model";
 import { Module } from "../module/module.model";
 import { ICourse } from "./course.interface";
 import { Course } from "./course.model";
+import { User } from "../user/user.model";
 
 const createIntoDB = async (payload: ICourse) => {
 	const existedCourse = await Course.findOne({ slug: payload.slug });
 	if (existedCourse) {
 		throw new CustomError(302, "Course title is already exist!");
+	}
+
+	// find instructor
+	const instructor = await User.findOne({
+		_id: payload.instructor,
+		isDeleted: false,
+	});
+
+	if (!instructor) {
+		throw new CustomError(302, "Instructor does not exist");
 	}
 
 	const slug = generateSlug(payload.title);
@@ -25,12 +36,15 @@ const getAllFromDB = async (
 	const res = new QueryBuilder(Course.find(), query)
 		.search(["title"])
 		.filter();
-	const courses = await res.queryModel.populate({
-		path: "modules",
-		populate: {
-			path: "lectures",
-		},
-	});
+	const courses = await res.queryModel
+		.populate({ path: "instructor", select: "name email" })
+		.populate({
+			path: "modules",
+
+			populate: {
+				path: "lectures",
+			},
+		});
 	return courses;
 };
 

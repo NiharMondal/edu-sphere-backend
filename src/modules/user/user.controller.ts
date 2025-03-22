@@ -22,5 +22,19 @@ const getInstructors = asyncHandler(async (req: Request, res: Response) => {
 		result: result,
 	});
 });
+const updateRole = asyncHandler(async (req: Request, res: Response) => {
+	const { id } = req.params;
+	const result = await userServices.updateRole(id, req.body);
 
-export const userController = { getInstructors, getAllFromDB };
+	sendResponse(res, {
+		statusCode: 200,
+		message: "Users role is updated successfully",
+		result: result,
+	});
+});
+
+export const userController = {
+	getInstructors,
+	getAllFromDB,
+	updateRole,
+};
