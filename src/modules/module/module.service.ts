@@ -64,7 +64,7 @@ const createIntoDB = async (courseId: string, payload: IModule) => {
 	} catch (error) {
 		await session.abortTransaction();
 		session.endSession();
-		console.log(error);
+
 		throw new CustomError(500, "Could not create module");
 	}
 };
@@ -98,12 +98,13 @@ const updateDoc = async (id: string, payload: Partial<IModule>) => {
 	if (!module) {
 		throw new CustomError(404, "Module not found!");
 	}
-
+	const slug = generateSlug(payload?.title as string);
 	const data = await Module.findByIdAndUpdate(
 		{ _id: id },
 		{
 			$set: {
 				...payload,
+				slug,
 			},
 		},
 		{ new: true, runValidators: true }
@@ -118,15 +119,29 @@ const deleteDoc = async (id: string) => {
 		throw new CustomError(404, "Module not found!");
 	}
 
-	//delete lectures based on module id
-	await Lecture.deleteMany({ module: id }); // id refers to module id
-	//updating course module array
-	await Course.findByIdAndUpdate(res.course, { $pull: { modules: id } });
+	const session = await mongoose.startSession();
+	session.startTransaction();
+	try {
+		//delete lectures based on module id
+		await Lecture.deleteMany({ module: id }).session(session); // id refers to module id
+		//updating course module array
+		await Course.findByIdAndUpdate(res.course, {
+			$pull: { modules: id },
+		}).session(session);
+		//deleting module
+		const data = await Module.findByIdAndDelete(id).session(session);
 
-	//deleting module
-	const data = await Module.findByIdAndDelete(id);
+		//commit session
+		await session.commitTransaction();
+		session.endSession();
 
-	return data;
+		return data;
+	} catch (error) {
+		await session.abortTransaction();
+		session.endSession();
+
+		throw new CustomError(500, "Could not delete module");
+	}
 };
 
 export const moduleServices = {
