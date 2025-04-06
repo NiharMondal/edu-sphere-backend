@@ -12,9 +12,6 @@ router.post(
 	moduleController.createIntoDB
 );
 
-//get all module
-router.get("/course/module", moduleController.getAllFromDB);
-
 //only admin can update and delete
 router
 	.route("/admin/:id")
@@ -23,4 +20,6 @@ router
 
 router.get("/:id", moduleController.getById);
 
+//get all module
+router.get("/", moduleController.getAllFromDB);
 export const moduleRoute = router;

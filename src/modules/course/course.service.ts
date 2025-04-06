@@ -49,7 +49,15 @@ const getAllFromDB = async (
 };
 
 const getById = async (id: string) => {
-	const data = await Course.findById(id).populate({ path: "modules" });
+	const data = await Course.findById(id)
+		.populate({ path: "instructor", select: "name email" })
+		.populate({
+			path: "modules",
+
+			populate: {
+				path: "lectures",
+			},
+		});
 	if (!data) {
 		throw new CustomError(404, "Course not found!");
 	}

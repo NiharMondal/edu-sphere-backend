@@ -9,17 +9,33 @@ const lectureSchema = new Schema<ILecture>(
 		},
 		slug: {
 			type: String,
+			unique: true,
 		},
 		type: {
 			type: String,
 			enum: ["video", "text", "pdf"],
+			required: [true, "File type is required"],
 		},
-		videoUrl: {
+		content: {
 			type: String,
+			required: [true, "Lecture content is required"],
+		},
+		duration: {
+			type: String,
+			required: function () {
+				return this.type === "video";
+			},
 		},
 		attachments: [
 			{
-				type: String,
+				url: {
+					type: String,
+					required: [true, "Attachment URL is required"],
+				},
+				fileType: {
+					type: String,
+					enum: ["video", "text", "pdf"],
+				},
 			},
 		],
 		module: {
