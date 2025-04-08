@@ -93,6 +93,15 @@ const getById = async (id: string) => {
 	return data;
 };
 
+// by course Id
+const getByCourseId = async (id: string) => {
+	const data = await Module.find({ course: id });
+	if (!data) {
+		throw new CustomError(404, "Course not found!");
+	}
+	return data;
+};
+
 const updateDoc = async (id: string, payload: Partial<IModule>) => {
 	const module = await Module.findById(id);
 	if (!module) {
@@ -148,6 +157,7 @@ export const moduleServices = {
 	createIntoDB,
 	getAllFromDB,
 	getById,
+	getByCourseId,
 
 	updateDoc,
 	deleteDoc,
