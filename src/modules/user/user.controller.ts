@@ -12,6 +12,15 @@ const getAllFromDB = asyncHandler(async (req: Request, res: Response) => {
 		result: result,
 	});
 });
+const getUserById = asyncHandler(async (req: Request, res: Response) => {
+	const result = await userServices.getUserById(req.params.id);
+
+	sendResponse(res, {
+		statusCode: 200,
+		message: "User fetched successfully",
+		result: result,
+	});
+});
 
 const getInstructors = asyncHandler(async (req: Request, res: Response) => {
 	const result = await userServices.getInstructors();
@@ -36,5 +45,6 @@ const updateRole = asyncHandler(async (req: Request, res: Response) => {
 export const userController = {
 	getInstructors,
 	getAllFromDB,
+	getUserById,
 	updateRole,
 };

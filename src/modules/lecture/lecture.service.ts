@@ -59,7 +59,7 @@ const createIntoDB = async (moduleId: string, payload: ILecture) => {
 	} catch (error) {
 		await session.abortTransaction();
 		session.endSession();
-
+		console.log(error);
 		throw new CustomError(500, "Could not create lecture");
 	}
 };

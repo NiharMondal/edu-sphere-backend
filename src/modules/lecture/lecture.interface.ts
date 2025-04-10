@@ -1,9 +1,9 @@
 import { Types } from "mongoose";
 
-type TAttachment = {
-	url: string;
-	fileType: "video" | "text" | "pdf";
-};
+// type TAttachment = {
+// 	url: string;
+// 	fileType: "video" | "text" | "pdf";
+// };
 export interface ILecture {
 	title: string;
 	slug: string;
@@ -11,6 +11,6 @@ export interface ILecture {
 	type: string;
 	duration: string;
 	module: Types.ObjectId;
-	attachments: TAttachment[];
+	// attachments: TAttachment[];
 	isDeleted: boolean;
 }

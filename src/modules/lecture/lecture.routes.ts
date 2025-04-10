@@ -12,8 +12,9 @@ router.post(
 	lectureController.createIntoDB
 );
 
+//only admin can delete and update lecture
 router
-	.route("/admin/:id")
+	.route("/:id")
 	.patch(lectureController.updateDoc)
 	.delete(lectureController.deleteDoc);
 

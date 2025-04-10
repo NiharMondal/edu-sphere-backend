@@ -26,18 +26,7 @@ const lectureSchema = new Schema<ILecture>(
 				return this.type === "video";
 			},
 		},
-		attachments: [
-			{
-				url: {
-					type: String,
-					required: [true, "Attachment URL is required"],
-				},
-				fileType: {
-					type: String,
-					enum: ["video", "text", "pdf"],
-				},
-			},
-		],
+
 		module: {
 			type: Schema.Types.ObjectId,
 			required: [true, "Module ID is required"],

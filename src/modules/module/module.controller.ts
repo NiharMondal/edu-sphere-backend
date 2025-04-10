@@ -34,6 +34,16 @@ const getById = asyncHandler(async (req: Request, res: Response) => {
 	});
 });
 
+const getByCourseId = asyncHandler(async (req: Request, res: Response) => {
+	const result = await moduleServices.getByCourseId(req.params.courseId);
+
+	sendResponse(res, {
+		statusCode: 200,
+		message: "Module fetched successfully by course ID",
+		result: result,
+	});
+});
+
 const updateDoc = asyncHandler(async (req: Request, res: Response) => {
 	const { id } = req.params;
 	const result = await moduleServices.updateDoc(id, req.body);
@@ -59,6 +69,7 @@ export const moduleController = {
 	createIntoDB,
 	getAllFromDB,
 	getById,
+	getByCourseId,
 
 	updateDoc,
 	deleteDoc,

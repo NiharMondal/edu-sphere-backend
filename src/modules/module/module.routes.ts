@@ -18,6 +18,7 @@ router
 	.patch(moduleController.updateDoc)
 	.delete(moduleController.deleteDoc);
 
+router.get("/courseId/:courseId", moduleController.getByCourseId);
 router.get("/:id", moduleController.getById);
 
 //get all module

@@ -5,6 +5,24 @@ const getAllFromDB = async () => {
 
 	return res;
 };
+const getUserById = async (id: string) => {
+	const res = await User.findById(id)
+		.select("-password")
+		.populate({
+			path: "enrolledCourses",
+			select: "course progress",
+			populate: {
+				path: "course",
+				select: "title price",
+			},
+		})
+		.populate({
+			path: "createdCourses",
+		});
+
+	return res;
+};
+
 const getInstructors = async () => {
 	const res = await User.find({
 		role: "instructor",
@@ -29,6 +47,7 @@ const updateRole = async (id: string, payload: { role: string }) => {
 
 export const userServices = {
 	getAllFromDB,
+	getUserById,
 	getInstructors,
 	updateRole,
 };
