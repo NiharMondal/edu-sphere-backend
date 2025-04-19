@@ -11,5 +11,5 @@ export const routesArray = [
 	{ path: "/modules", route: moduleRoute },
 	{ path: "/lectures", route: lectureRoute },
 	{ path: "/users", route: userRoutes },
-	{ path: "/enrollment", route: enrollmentRoute },
+	{ path: "/enrollments", route: enrollmentRoute },
 ];

@@ -1,8 +1,8 @@
 import { JwtPayload } from "jsonwebtoken";
-import { checkPassword } from "../../utils/checkPassword";
+import { comparePassword, hashPassword } from "../../utils/checkPassword";
 import CustomError from "../../utils/CustomError";
 import { User } from "../user/user.model";
-import { IRegisterUser } from "./auth.interface";
+import { IChangePassword, IRegisterUser } from "./auth.interface";
 import { generateToken } from "../../utils";
 
 const registerUser = async (payload: IRegisterUser) => {
@@ -28,10 +28,13 @@ const loginUser = async (payload: Omit<IRegisterUser, "name">) => {
 		throw new CustomError(404, "Invalid credentials");
 	}
 
-	const validPassword = await checkPassword(payload.password, user.password);
+	const validPassword = await comparePassword(
+		payload.password,
+		user.password
+	);
 
 	if (!validPassword) {
-		throw new CustomError(404, "Invalid credentials");
+		throw new CustomError(400, "Invalid credentials");
 	}
 
 	const tokenPayload = {
@@ -48,7 +51,49 @@ const loginUser = async (payload: Omit<IRegisterUser, "name">) => {
 	};
 };
 
+const changePassword = async (id: string, payload: IChangePassword) => {
+	const user = await User.findById(id);
+
+	if (!user) {
+		throw new CustomError(404, "User not found");
+	}
+
+	if (payload.newPassword !== payload.confirmPassword) {
+		throw new CustomError(400, "Password does not match");
+	}
+
+	const matchPassword = await comparePassword(
+		payload.oldPassword,
+		user.password
+	);
+
+	if (!matchPassword) {
+		throw new CustomError(400, "Invalid credentials");
+	}
+
+	const isSame = await comparePassword(payload.newPassword, user.password);
+
+	if (isSame) {
+		throw new CustomError(
+			400,
+			"New password must be different from current password"
+		);
+	}
+
+	const hashed = await hashPassword(payload.newPassword);
+
+	await User.findByIdAndUpdate(
+		id,
+		{
+			$set: {
+				password: hashed,
+			},
+		},
+		{ new: true, runValidators: true }
+	);
+};
 export const authServices = {
 	registerUser,
 	loginUser,
+	changePassword,
 };

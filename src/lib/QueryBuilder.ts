@@ -1,4 +1,4 @@
-import { FilterQuery, Query } from "mongoose";
+import mongoose, { FilterQuery, Query } from "mongoose";
 
 class QueryBuilder<T> {
 	public queryModel: Query<T[], T>;
@@ -30,12 +30,12 @@ class QueryBuilder<T> {
 		// deleting item from main query
 		excludedFields.forEach((field) => delete queryCopy[field]);
 
-		if (this.query) {
+		if (this?.query) {
 			this.queryModel = this.queryModel.find(queryCopy);
 		}
 		return this;
 	}
-	search(searchableFields: string[]) {
+	search(searchableFields: string[] | []) {
 		if (this?.query?.search) {
 			this.queryModel = this.queryModel.find({
 				$or: searchableFields.map(

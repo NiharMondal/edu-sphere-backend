@@ -9,11 +9,14 @@ const createrUser = z.object({
 	email: z
 		.string({ required_error: "Email is required" })
 		.email({ message: "Email should be valid email" })
+		.toLowerCase()
 		.trim(),
-	role: z.enum(["user", "admin"]).optional(),
+
 	password: z
 		.string({ required_error: "Password is required" })
 		.min(6, "Password should be at least 6 characters")
 		.max(28, "Password max length is 28")
 		.trim(),
 });
+
+export const userValidation = { createrUser };

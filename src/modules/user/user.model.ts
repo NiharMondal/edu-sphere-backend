@@ -12,6 +12,9 @@ const userSchema = new Schema<IUser>(
 		email: {
 			type: String,
 			required: [true, "Email is required"],
+			unique: true, // This ensures a MongoDB-level constraint
+			lowercase: true,
+			trim: true,
 		},
 		password: {
 			type: String,

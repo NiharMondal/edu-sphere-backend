@@ -12,5 +12,28 @@ const createIntoDB = asyncHandler(async (req: Request, res: Response) => {
 		result: result,
 	});
 });
+const getAllFromDB = asyncHandler(async (req: Request, res: Response) => {
+	const result = await enrollmentServices.getAllFromDB(req.query as {});
 
-export const enrollmentController = { createIntoDB };
+	sendResponse(res, {
+		statusCode: 200,
+		message: "Enrolled doc fetched successfully",
+		result: result,
+	});
+});
+const myEnrollment = asyncHandler(async (req: Request, res: Response) => {
+	const { id } = req.params;
+	const result = await enrollmentServices.myEnrollment(id);
+
+	sendResponse(res, {
+		statusCode: 200,
+		message: "Enrolled doc fetched successfully",
+		result: result,
+	});
+});
+
+export const enrollmentController = {
+	createIntoDB,
+	getAllFromDB,
+	myEnrollment,
+};

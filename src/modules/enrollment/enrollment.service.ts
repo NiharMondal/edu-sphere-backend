@@ -4,6 +4,7 @@ import { Course } from "../course/course.model";
 import { IEnrollment } from "./enrollment.interface";
 import { Enrollment } from "./enrollment.model";
 import { User } from "../user/user.model";
+import QueryBuilder from "../../lib/QueryBuilder";
 
 const createIntoDB = async (payload: IEnrollment) => {
 	const course = await Course.findById(payload.course);
@@ -44,4 +45,24 @@ const createIntoDB = async (payload: IEnrollment) => {
 	}
 };
 
-export const enrollmentServices = { createIntoDB };
+const getAllFromDB = async (
+	query: Record<string, string | string[] | undefined>
+) => {
+	console.log(query);
+	const res = new QueryBuilder(Enrollment.find(), query);
+
+	const data = await res.queryModel;
+
+	return data;
+};
+
+const myEnrollment = async (id: string) => {
+	const res = await Enrollment.find({ student: id }).populate({
+		path: "course",
+		select: "slug title thumbnail",
+	});
+
+	return res;
+};
+
+export const enrollmentServices = { createIntoDB, getAllFromDB, myEnrollment };

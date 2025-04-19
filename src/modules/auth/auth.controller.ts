@@ -15,7 +15,7 @@ const registerUser = asyncHandler(async (req: Request, res: Response) => {
 	});
 });
 
-//register user
+//login user
 const loginUser = asyncHandler(async (req: Request, res: Response) => {
 	const result = await authServices.loginUser(req.body);
 
@@ -25,4 +25,14 @@ const loginUser = asyncHandler(async (req: Request, res: Response) => {
 		result: result,
 	});
 });
-export const authController = { registerUser, loginUser };
+const changePassword = asyncHandler(async (req: Request, res: Response) => {
+	const { id } = req.user;
+	const result = await authServices.changePassword(id, req.body);
+
+	sendResponse(res, {
+		statusCode: 200,
+		message: "Password changed successfully",
+		result: result,
+	});
+});
+export const authController = { registerUser, loginUser, changePassword };
