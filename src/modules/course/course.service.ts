@@ -7,6 +7,8 @@ import { Module } from "../module/module.model";
 import { ICourse } from "./course.interface";
 import { Course } from "./course.model";
 import { User } from "../user/user.model";
+import { IModule } from "../module/module.interface";
+import { ILecture } from "../lecture/lecture.interface";
 
 const createIntoDB = async (payload: ICourse) => {
 	const existedCourse = await Course.findOne({ slug: payload.slug });
@@ -65,14 +67,118 @@ const getById = async (id: string) => {
 };
 
 const getBySlug = async (slug: string) => {
-	const data = await Course.findOne({ slug }).populate({
-		path: "modules",
-		select: "title",
-	});
-	if (!data) {
-		throw new CustomError(404, "Course not found!");
-	}
-	return data;
+	// const course = await Course.findOne({ slug })
+	// 	.populate({ path: "instructor", select: "name avatar -_id" })
+	// 	.populate<{
+	// 		modules: (IModule & { lectures: ILecture[] })[];
+	// 	}>({
+	// 		path: "modules",
+	// 		select: "title",
+	// 		options: { sort: { index: 1 } },
+
+	// 		populate: {
+	// 			path: "lectures",
+	// 			select: "title",
+	// 		},
+	// 	})
+	// 	.select("-students");
+
+	// if (!course) {
+	// 	throw new CustomError(404, "Course not found!");
+	// }
+	// const populatedModules = course.modules as unknown as IModule[];
+	// // Calculate total lecture count
+	// const totalLectures = populatedModules.reduce((acc, mod) => {
+	// 	return acc + (mod.lectures?.length || 0);
+	// }, 0);
+
+	// return course;
+
+	const result = await Course.aggregate([
+		{ $match: { slug: slug } },
+
+		{
+			$lookup: {
+				from: "users",
+				localField: "instructor",
+				foreignField: "_id",
+				as: "instructor",
+				pipeline: [
+					{ $project: { name: 1, avatar: 1 } }, // Only include name and avatar
+				],
+			},
+		},
+		// Get all modules of this course
+		{
+			$lookup: {
+				from: "modules",
+				let: { courseId: "$_id" },
+				pipeline: [
+					{
+						$match: {
+							$expr: { $eq: ["$course", "$$courseId"] },
+						},
+					},
+
+					// Lookup lectures inside each module
+					{
+						$lookup: {
+							from: "lectures",
+							let: { moduleId: "$_id" },
+							pipeline: [
+								{
+									$match: {
+										$expr: {
+											$eq: ["$module", "$$moduleId"],
+										},
+									},
+								},
+								{ $project: { title: 1 } },
+							],
+							as: "lectures",
+						},
+					},
+					{
+						$project: {
+							title: 1,
+							lectures: 1,
+						},
+					},
+				],
+				as: "modules",
+			},
+		},
+
+		// Add total lecture count across all modules
+		{
+			$addFields: {
+				totalLectures: {
+					$sum: {
+						$map: {
+							input: "$modules",
+							as: "mod",
+							in: { $size: "$$mod.lectures" },
+						},
+					},
+				},
+				totalModules: { $size: "$modules" },
+			},
+		},
+
+		{
+			$project: {
+				title: 1,
+				description: 1,
+				thumbnail: 1,
+				instructor: { $arrayElemAt: ["$instructor", 0] },
+				modules: 1,
+				totalModules: 1,
+				totalLectures: 1,
+			},
+		},
+	]);
+
+	return result[0];
 };
 
 const updateDoc = async (id: string, payload: Partial<ICourse>) => {

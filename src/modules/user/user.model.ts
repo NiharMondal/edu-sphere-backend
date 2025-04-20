@@ -16,6 +16,10 @@ const userSchema = new Schema<IUser>(
 			lowercase: true,
 			trim: true,
 		},
+		avatar: {
+			type: String,
+			trim: true,
+		},
 		password: {
 			type: String,
 			required: [true, "Password is required"],
