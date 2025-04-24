@@ -2,6 +2,8 @@ import { Router } from "express";
 import { authController } from "./auth.controller";
 import { validateRequest } from "../../middleware/validateRequest";
 import { authValidation } from "./auth.validation";
+import { authGuard } from "../../middleware/authGuard";
+import { ROLE } from "../../constant";
 
 const router = Router();
 
@@ -14,6 +16,12 @@ router.post(
 	"/login",
 	validateRequest(authValidation.loginUser),
 	authController.loginUser
+);
+
+router.post(
+	"/change-password",
+	authGuard(ROLE.admin, ROLE.instructor, ROLE.student),
+	authController.changePassword
 );
 
 export const authRoute = router;

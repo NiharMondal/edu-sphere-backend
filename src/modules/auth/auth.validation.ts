@@ -8,9 +8,10 @@ const registerUser = z.object({
 		.trim(),
 	email: z
 		.string({ required_error: "Email is required" })
-		.email({ message: "Email should be valid email" })
+		.email({ message: "Email should be a valid email" })
+		.toLowerCase()
 		.trim(),
-	role: z.enum(["user", "admin"]).optional(),
+	role: z.enum(["student", "admin", "instructor"]).optional(),
 	password: z
 		.string({ required_error: "Password is required" })
 		.min(6, "Password should be at least 6 characters")

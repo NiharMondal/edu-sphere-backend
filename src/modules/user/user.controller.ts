@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 import asyncHandler from "../../utils/asyncHandler";
 import sendResponse from "../../utils/sendResponse";
 import { userServices } from "./user.service";
+import { Types } from "mongoose";
 
 const getAllFromDB = asyncHandler(async (req: Request, res: Response) => {
 	const result = await userServices.getAllFromDB();
@@ -12,8 +13,10 @@ const getAllFromDB = asyncHandler(async (req: Request, res: Response) => {
 		result: result,
 	});
 });
+
 const getUserById = asyncHandler(async (req: Request, res: Response) => {
-	const result = await userServices.getUserById(req.params.id);
+	const { id } = req.params;
+	const result = await userServices.getUserById(id);
 
 	sendResponse(res, {
 		statusCode: 200,
@@ -31,13 +34,24 @@ const getInstructors = asyncHandler(async (req: Request, res: Response) => {
 		result: result,
 	});
 });
+
+const updateDoc = asyncHandler(async (req: Request, res: Response) => {
+	const { id } = req.params;
+	const result = await userServices.updateDoc(id, req.body);
+
+	sendResponse(res, {
+		statusCode: 200,
+		message: "User updated successfully",
+		result: result,
+	});
+});
 const updateRole = asyncHandler(async (req: Request, res: Response) => {
 	const { id } = req.params;
 	const result = await userServices.updateRole(id, req.body);
 
 	sendResponse(res, {
 		statusCode: 200,
-		message: "Users role is updated successfully",
+		message: "User role is updated successfully",
 		result: result,
 	});
 });
@@ -46,5 +60,6 @@ export const userController = {
 	getInstructors,
 	getAllFromDB,
 	getUserById,
+	updateDoc,
 	updateRole,
 };
