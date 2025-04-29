@@ -133,7 +133,7 @@ const getBySlug = async (slug: string) => {
 										},
 									},
 								},
-								{ $project: { title: 1 } },
+								{ $project: { title: 1, slug: 1, content: 1 } },
 							],
 							as: "lectures",
 						},

@@ -9,7 +9,7 @@ export interface ILecture {
 	slug: string;
 	content: string;
 	type: string;
-	duration: string;
+	duration: number;
 	module: Types.ObjectId;
 	// attachments: TAttachment[];
 	isDeleted: boolean;

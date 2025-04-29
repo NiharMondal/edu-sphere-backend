@@ -21,7 +21,7 @@ const lectureSchema = new Schema<ILecture>(
 			required: [true, "Lecture content is required"],
 		},
 		duration: {
-			type: String,
+			type: Number,
 			required: function () {
 				return this.type === "video";
 			},
