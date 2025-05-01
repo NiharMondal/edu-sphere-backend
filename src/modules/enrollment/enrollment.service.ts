@@ -7,19 +7,33 @@ import { User } from "../user/user.model";
 import QueryBuilder from "../../lib/QueryBuilder";
 
 const createIntoDB = async (payload: IEnrollment) => {
-	const course = await Course.findById(payload.course);
-	if (!course) {
-		throw new CustomError(404, "Course not found!");
-	}
 	const student = await User.findById(payload.student);
 	if (!student) {
 		throw new CustomError(404, "Student not found!");
 	}
 
+	//find course
+	const course = await Course.findById(payload.course).populate({
+		path: "modules",
+		populate: {
+			path: "lectures",
+			select: "_id slug",
+		},
+		select: "_id slug",
+	});
+
+	if (!course) {
+		throw new CustomError(404, "Course not found!");
+	}
+
 	const session = await mongoose.startSession();
 	session.startTransaction();
 	try {
-		const data = new Enrollment(payload);
+		const data = new Enrollment({
+			...payload,
+			enrolledAt: new Date(),
+			lastWatchedLecture: "",
+		});
 		await data.save({ session });
 
 		await Course.findByIdAndUpdate(data.course, {

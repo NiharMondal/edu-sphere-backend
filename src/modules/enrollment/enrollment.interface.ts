@@ -4,6 +4,6 @@ export interface IEnrollment {
 	student: Types.ObjectId;
 	course: Types.ObjectId;
 	progress: number;
-	lastLecture: Types.ObjectId;
+	lastWatchedLecture: Types.ObjectId;
 	enrolledAt: Date;
 }
