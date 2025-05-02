@@ -6,7 +6,11 @@ import { ROLE } from "../../constant";
 const router = Router();
 
 router.patch("/:id", userController.updateDoc);
-
+router.get(
+	"/my-profile",
+	authGuard(ROLE.admin, ROLE.student, ROLE.instructor),
+	userController.getMyProfile
+);
 router.patch(
 	"/update-role/:id",
 	authGuard(ROLE.admin), // only admin can update user's role

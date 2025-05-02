@@ -55,6 +55,16 @@ const updateRole = asyncHandler(async (req: Request, res: Response) => {
 		result: result,
 	});
 });
+const getMyProfile = asyncHandler(async (req: Request, res: Response) => {
+	const user = req.user;
+	const result = await userServices.getMyProfile(user?.id);
+
+	sendResponse(res, {
+		statusCode: 200,
+		message: "Profile found",
+		result: result,
+	});
+});
 
 export const userController = {
 	getInstructors,
@@ -62,4 +72,6 @@ export const userController = {
 	getUserById,
 	updateDoc,
 	updateRole,
+
+	getMyProfile,
 };
