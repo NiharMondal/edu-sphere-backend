@@ -8,6 +8,7 @@ const getAllFromDB = async () => {
 
 	return res;
 };
+
 const getUserById = async (id: string) => {
 	const res = await User.findById(id)
 		.select("-password")
@@ -77,10 +78,19 @@ const updateRole = async (id: string, payload: { role: string }) => {
 	return res;
 };
 
+const getMyProfile = async (id: string) => {
+	const user = await User.findById(id).select("name email avatar");
+	if (!user) {
+		throw new CustomError(404, "User not found!");
+	}
+	return user;
+};
 export const userServices = {
 	getAllFromDB,
 	getUserById,
 	getInstructors,
 	updateDoc,
 	updateRole,
+
+	getMyProfile,
 };

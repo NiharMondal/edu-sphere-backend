@@ -17,9 +17,10 @@ const enrollmentSchema = new Schema<IEnrollment>(
 			type: Number,
 			default: 0,
 		},
-		lastLecture: {
+		lastWatchedLecture: {
 			type: Schema.Types.ObjectId,
 			ref: "Lecture",
+			default: null,
 		},
 		enrolledAt: {
 			type: Date,
