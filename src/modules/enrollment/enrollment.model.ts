@@ -22,6 +22,12 @@ const enrollmentSchema = new Schema<IEnrollment>(
 			ref: "Lecture",
 			default: null,
 		},
+		unLockedLectureIds: [
+			{
+				type: Schema.Types.ObjectId,
+				ref: "Lecture",
+			},
+		],
 		enrolledAt: {
 			type: Date,
 			default: Date.now,

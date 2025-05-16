@@ -5,5 +5,6 @@ export interface IEnrollment {
 	course: Types.ObjectId;
 	progress: number;
 	lastWatchedLecture: Types.ObjectId;
+	unLockedLectureIds: Types.ObjectId;
 	enrolledAt: Date;
 }

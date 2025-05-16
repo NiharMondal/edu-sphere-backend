@@ -1,11 +1,19 @@
-import mongoose from "mongoose";
+import mongoose, { Types } from "mongoose";
 import CustomError from "../../utils/CustomError";
 import { Course } from "../course/course.model";
 import { IEnrollment } from "./enrollment.interface";
 import { Enrollment } from "./enrollment.model";
 import { User } from "../user/user.model";
 import QueryBuilder from "../../lib/QueryBuilder";
+import { Module } from "../module/module.model";
+import { IModule } from "../module/module.interface";
+import { ILecture } from "../lecture/lecture.interface";
 
+type ExtendLecture = ILecture & { _id: Types.ObjectId };
+
+type PopulatedModule = IModule & {
+	lectures: ExtendLecture[];
+};
 const createIntoDB = async (payload: IEnrollment) => {
 	const student = await User.findById(payload.student);
 	if (!student) {
@@ -18,6 +26,7 @@ const createIntoDB = async (payload: IEnrollment) => {
 		populate: {
 			path: "lectures",
 			select: "_id slug",
+			model: "Lecture",
 		},
 		select: "_id slug",
 	});
@@ -26,13 +35,31 @@ const createIntoDB = async (payload: IEnrollment) => {
 		throw new CustomError(404, "Course not found!");
 	}
 
+	// 1. Get all modules for the course sorted by index
+	const modules = await Module.find({ course: payload.course })
+		.sort({ index: 1 }) // assuming your "index" field determines order
+		.populate({
+			path: "lectures",
+			model: "Lecture",
+			match: { isDeleted: false },
+		});
+
+	// 2. Find the first lecture across all modules
+	let firstLecture: mongoose.Types.ObjectId | null = null;
+
+	for (const module of modules as unknown as PopulatedModule[]) {
+		if (module.lectures.length > 0) {
+			firstLecture = module.lectures[0]._id;
+			break;
+		}
+	}
 	const session = await mongoose.startSession();
 	session.startTransaction();
 	try {
 		const data = new Enrollment({
 			...payload,
 			enrolledAt: new Date(),
-			lastWatchedLecture: "",
+			lastWatchedLecture: firstLecture,
 		});
 		await data.save({ session });
 
@@ -71,10 +98,15 @@ const getAllFromDB = async (
 };
 
 const myEnrollment = async (id: string) => {
-	const res = await Enrollment.find({ student: id }).populate({
-		path: "course",
-		select: "slug title thumbnail",
-	});
+	const res = await Enrollment.find({ student: id })
+		.populate({
+			path: "course",
+			select: "slug title thumbnail",
+		})
+		.populate({
+			path: "lastWatchedLecture",
+			select: "slug",
+		});
 
 	return res;
 };
