@@ -8,6 +8,7 @@ import QueryBuilder from "../../lib/QueryBuilder";
 import { Module } from "../module/module.model";
 import { IModule } from "../module/module.interface";
 import { ILecture } from "../lecture/lecture.interface";
+import { Progress } from "../progress/progress.model";
 
 type ExtendLecture = ILecture & { _id: Types.ObjectId };
 
@@ -56,24 +57,28 @@ const createIntoDB = async (payload: IEnrollment) => {
 	const session = await mongoose.startSession();
 	session.startTransaction();
 	try {
-		const data = new Enrollment({
+		const progressData = new Progress({
 			...payload,
-			enrolledAt: new Date(),
 			lastWatchedLecture: firstLecture,
 		});
-		await data.save({ session });
+		await progressData.save({ session }); // 1st: creating progress for the requested course
+
+		const data = new Enrollment({
+			...payload,
+		});
+		await data.save({ session }); //2nd: creating enrollment or purchase
 
 		await Course.findByIdAndUpdate(data.course, {
 			$push: {
 				students: data.student,
 			},
-		}).session(session);
+		}).session(session); // 3rd: updating course collection and inserting student ID
 
 		await User.findByIdAndUpdate(data.student, {
 			$push: {
 				enrolledCourses: data._id,
 			},
-		}).session(session);
+		}).session(session); // 4th: updating user collection and inserting enrolled ID to users' enrolledCourses field
 
 		await session.commitTransaction();
 		session.endSession();
@@ -98,15 +103,10 @@ const getAllFromDB = async (
 };
 
 const myEnrollment = async (id: string) => {
-	const res = await Enrollment.find({ student: id })
-		.populate({
-			path: "course",
-			select: "slug title thumbnail",
-		})
-		.populate({
-			path: "lastWatchedLecture",
-			select: "slug",
-		});
+	const res = await Enrollment.find({ student: id }).populate({
+		path: "course",
+		select: "slug title thumbnail",
+	});
 
 	return res;
 };
