@@ -36,12 +36,6 @@ const userSchema = new Schema<IUser>(
 				ref: "Enrollment",
 			},
 		],
-		createdCourses: [
-			{
-				type: Schema.Types.ObjectId,
-				ref: "Course",
-			},
-		],
 		isDeleted: {
 			type: Boolean,
 			default: false,

@@ -5,5 +5,5 @@ export interface IProgress {
 	course: Types.ObjectId;
 	progress: number;
 	lastWatchedLecture: Types.ObjectId;
-	completedLectures: Types.ObjectId;
+	completedLectures: string;
 }

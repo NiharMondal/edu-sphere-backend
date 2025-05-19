@@ -3,6 +3,6 @@ import { progressController } from "./progress.controller";
 
 const router = Router();
 
-router.patch("/:lectureId", progressController.markLectureComplete);
+router.post("/lecture/:lectureId", progressController.markLectureComplete);
 
 export const progressRoute = router;

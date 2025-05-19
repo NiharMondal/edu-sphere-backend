@@ -5,7 +5,6 @@ import { progressServices } from "./progress.service";
 
 const markLectureComplete = asyncHandler(
 	async (req: Request, res: Response) => {
-        
 		const lectureId = req.params.lectureId;
 
 		const { student, course } = req.body;
@@ -18,7 +17,7 @@ const markLectureComplete = asyncHandler(
 
 		sendResponse(res, {
 			statusCode: 201,
-			message: "Course enrolled successfully",
+			message: "Lecture updated successfully",
 			result: result,
 		});
 	}

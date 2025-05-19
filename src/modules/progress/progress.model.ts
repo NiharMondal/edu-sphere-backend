@@ -14,19 +14,14 @@ const progressSchema = new Schema<IProgress>({
 	},
 	progress: {
 		type: Number,
-		default: 0,
+		default: 0, // in percentage
 	},
 	lastWatchedLecture: {
 		type: Schema.Types.ObjectId,
 		ref: "Lecture",
 		default: null,
 	},
-	completedLectures: [
-		{
-			type: Schema.Types.ObjectId,
-			ref: "Lecture",
-		},
-	],
+	completedLectures: [String],
 });
 
 export const Progress = model<IProgress>("Progress", progressSchema);
