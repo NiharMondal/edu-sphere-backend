@@ -7,6 +7,16 @@ import { IModule } from "../module/module.interface";
 import { Progress } from "./progress.model";
 import { Module } from "../module/module.model";
 
+const findAllCoursesProgress = async (studentId: string) => {
+	const data = Progress.find({ student: studentId });
+
+	if (!data) {
+		throw new CustomError(404, "Progress data not found");
+	}
+
+	return data;
+};
+
 /**
  *
  * @param courseId
@@ -17,6 +27,7 @@ import { Module } from "../module/module.model";
 type PopulatedModule = IModule[] & {
 	lectures: ILecture[];
 };
+
 const markLectureComplete = async (
 	courseId: string,
 	studentId: string,
@@ -69,5 +80,6 @@ const markLectureComplete = async (
 };
 
 export const progressServices = {
+	findAllCoursesProgress,
 	markLectureComplete,
 };

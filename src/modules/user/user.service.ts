@@ -19,9 +19,6 @@ const getUserById = async (id: string) => {
 				path: "course",
 				select: "title price",
 			},
-		})
-		.populate({
-			path: "createdCourses",
 		});
 
 	return res;

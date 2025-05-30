@@ -3,6 +3,19 @@ import asyncHandler from "../../utils/asyncHandler";
 import sendResponse from "../../utils/sendResponse";
 import { progressServices } from "./progress.service";
 
+const findAllCoursesProgress = asyncHandler(
+	async (req: Request, res: Response) => {
+		const { id } = req.user;
+
+		const result = await progressServices.findAllCoursesProgress(id);
+
+		sendResponse(res, {
+			statusCode: 201,
+			message: "Progress fetched successfully",
+			result: result,
+		});
+	}
+);
 const markLectureComplete = asyncHandler(
 	async (req: Request, res: Response) => {
 		const lectureId = req.params.lectureId;
@@ -23,4 +36,7 @@ const markLectureComplete = asyncHandler(
 	}
 );
 
-export const progressController = { markLectureComplete };
+export const progressController = {
+	findAllCoursesProgress,
+	markLectureComplete,
+};

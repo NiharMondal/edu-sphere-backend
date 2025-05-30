@@ -18,6 +18,10 @@ const enrollmentSchema = new Schema<IEnrollment>(
 			type: Date,
 			default: Date.now,
 		},
+		progress: {
+			type: Schema.Types.ObjectId,
+			ref: "Progress",
+		},
 	},
 	{ timestamps: true }
 );

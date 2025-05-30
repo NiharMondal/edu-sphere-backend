@@ -66,6 +66,7 @@ const createIntoDB = async (payload: IEnrollment) => {
 
 		const data = new Enrollment({
 			...payload,
+			progress: progressData._id,
 		});
 		await data.save({ session }); //2nd: creating enrollment or purchase
 
@@ -104,10 +105,19 @@ const getAllFromDB = async (
 };
 
 const myEnrollment = async (id: string) => {
-	const res = await Enrollment.find({ student: id }).populate({
-		path: "course",
-		select: "slug title thumbnail",
-	});
+	const res = await Enrollment.find({ student: id })
+		.populate({
+			path: "course",
+			select: "slug title thumbnail",
+		})
+		.populate({
+			path: "progress",
+			select: "progress",
+			populate: {
+				path: "lastWatchedLecture",
+				select: "slug",
+			},
+		});
 
 	return res;
 };

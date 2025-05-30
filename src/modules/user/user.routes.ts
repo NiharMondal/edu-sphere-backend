@@ -20,4 +20,4 @@ router.get("/instructors", userController.getInstructors);
 router.get("/:id", userController.getUserById);
 router.get("/", userController.getAllFromDB);
 
-export const userRoutes = router;
+export const userRoute = router;
