@@ -115,7 +115,7 @@ const myEnrollment = async (id: string) => {
 			select: "progress",
 			populate: {
 				path: "lastWatchedLecture",
-				select: "slug",
+				select: "type",
 			},
 		});
 

@@ -6,6 +6,7 @@ export interface ICourse {
 	thumbnail: string;
 	description: string;
 	price: number;
+	rating: number;
 	instructor: Types.ObjectId;
 	modules: Types.ObjectId;
 	students: Types.ObjectId;

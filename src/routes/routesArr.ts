@@ -4,6 +4,7 @@ import { enrollmentRoute } from "../modules/enrollment/enrollment.routes";
 import { lectureRoute } from "../modules/lecture/lecture.routes";
 import { moduleRoute } from "../modules/module/module.routes";
 import { progressRoute } from "../modules/progress/progress.routes";
+import { reviewRoute } from "../modules/review/review.routes";
 import { userRoute } from "../modules/user/user.routes";
 
 export const routesArray = [
@@ -14,4 +15,5 @@ export const routesArray = [
 	{ path: "/users", route: userRoute },
 	{ path: "/enrollments", route: enrollmentRoute },
 	{ path: "/progress", route: progressRoute },
+	{ path: "/reviews", route: reviewRoute },
 ];

@@ -23,7 +23,10 @@ const courseSchema = new Schema<ICourse>(
 			type: Number,
 			required: [true, "Price is required"],
 		},
-
+		rating: {
+			type: Number,
+			default: null,
+		},
 		isDeleted: {
 			type: Boolean,
 			default: false,
