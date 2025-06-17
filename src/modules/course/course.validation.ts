@@ -10,6 +10,13 @@ const createCourse = z.object({
 		.string({ required_error: "Thumbnail is required" })
 		.url({ message: "Provide a valid URL" })
 		.trim(),
+	shortVideo: z
+		.string({ required_error: "Thumbnail is required" })
+		.url({ message: "Provide a valid URL" })
+		.trim()
+		.optional(),
+	level: z.enum(["Beginner", "Intermediate", "Expert"]),
+	duration: z.string({ required_error: "Duration is required" }),
 	price: z
 		.number({ required_error: "Course price is required" })
 		.positive()
@@ -19,7 +26,10 @@ const createCourse = z.object({
 		.min(20, "Min characters should be 20")
 		.max(500, "Max character is 500")
 		.trim(),
-	instructor: z.string({ required_error: "Instructor is is missing" }).trim(),
+	instructor: z
+		.string({ required_error: "Instructor is is missing" })
+		.nonempty({ message: "Instructor can not be empty" })
+		.trim(),
 });
 
 export const courseValidation = { createCourse };

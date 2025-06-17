@@ -5,6 +5,9 @@ import { validateRequest } from "../../middleware/validateRequest";
 
 const router = Router();
 
+// popular courses
+router.get("/popular-courses", courseController.popularCourses);
+
 // update and delete
 router
 	.route("/:id")

@@ -7,8 +7,6 @@ import { Module } from "../module/module.model";
 import { ICourse } from "./course.interface";
 import { Course } from "./course.model";
 import { User } from "../user/user.model";
-import { IModule } from "../module/module.interface";
-import { ILecture } from "../lecture/lecture.interface";
 
 const createIntoDB = async (payload: ICourse) => {
 	const existedCourse = await Course.findOne({ slug: payload.slug });
@@ -38,24 +36,25 @@ const getAllFromDB = async (
 	const res = new QueryBuilder(Course.find(), query)
 		.search(["title"])
 		.filter();
-	const courses = await res.queryModel
-		.populate({ path: "instructor", select: "name email" })
-		.populate({
-			path: "modules",
+	const courses = await res.queryModel.populate({
+		path: "instructor",
+		select: "name",
+	});
+	// .populate({
+	// 	path: "modules",
 
-			populate: {
-				path: "lectures",
-			},
-		});
+	// 	populate: {
+	// 		path: "lectures",
+	// 	},
+	// });
 	return courses;
 };
 
 const getById = async (id: string) => {
 	const data = await Course.findById(id)
-		.populate({ path: "instructor", select: "name email" })
+		.populate({ path: "instructor", select: "name avatar" })
 		.populate({
 			path: "modules",
-
 			populate: {
 				path: "lectures",
 			},
@@ -67,33 +66,6 @@ const getById = async (id: string) => {
 };
 
 const getBySlug = async (slug: string) => {
-	// const course = await Course.findOne({ slug })
-	// 	.populate({ path: "instructor", select: "name avatar -_id" })
-	// 	.populate<{
-	// 		modules: (IModule & { lectures: ILecture[] })[];
-	// 	}>({
-	// 		path: "modules",
-	// 		select: "title",
-	// 		options: { sort: { index: 1 } },
-
-	// 		populate: {
-	// 			path: "lectures",
-	// 			select: "title",
-	// 		},
-	// 	})
-	// 	.select("-students");
-
-	// if (!course) {
-	// 	throw new CustomError(404, "Course not found!");
-	// }
-	// const populatedModules = course.modules as unknown as IModule[];
-	// // Calculate total lecture count
-	// const totalLectures = populatedModules.reduce((acc, mod) => {
-	// 	return acc + (mod.lectures?.length || 0);
-	// }, 0);
-
-	// return course;
-
 	const result = await Course.aggregate([
 		{ $match: { slug: slug } },
 
@@ -119,6 +91,7 @@ const getBySlug = async (slug: string) => {
 							$expr: { $eq: ["$course", "$$courseId"] },
 						},
 					},
+					{ $sort: { index: 1 } },
 
 					// Lookup lectures inside each module
 					{
@@ -133,7 +106,14 @@ const getBySlug = async (slug: string) => {
 										},
 									},
 								},
-								{ $project: { title: 1, slug: 1, content: 1 } },
+								{
+									$project: {
+										title: 1,
+										content: 1,
+										type: 1,
+										duration: 1,
+									},
+								},
 							],
 							as: "lectures",
 						},
@@ -141,6 +121,7 @@ const getBySlug = async (slug: string) => {
 					{
 						$project: {
 							title: 1,
+							index: 1,
 							lectures: 1,
 						},
 					},
@@ -263,6 +244,12 @@ const deleteDoc = async (id: string) => {
 	}
 };
 
+const popularCourses = async () => {
+	const courses = await Course.find({ rating: { $gte: 3 } });
+
+	return courses;
+};
+
 export const courseServices = {
 	createIntoDB,
 	getAllFromDB,
@@ -270,4 +257,6 @@ export const courseServices = {
 	getBySlug,
 	updateDoc,
 	deleteDoc,
+
+	popularCourses,
 };

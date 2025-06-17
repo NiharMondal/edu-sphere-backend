@@ -5,8 +5,8 @@ export interface IUser {
 	email: string;
 	avatar: string;
 	password: string;
+	phone: string;
 	role: string;
-	enrolledCourses: Types.ObjectId;
-	createdCourses: Types.ObjectId;
+
 	isDeleted: boolean;
 }

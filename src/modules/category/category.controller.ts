@@ -1,86 +1,74 @@
 import { Request, Response } from "express";
 import asyncHandler from "../../utils/asyncHandler";
 import sendResponse from "../../utils/sendResponse";
-import { courseServices } from "./course.service";
+import { categoryServices } from "./category.service";
 
 const createIntoDB = asyncHandler(async (req: Request, res: Response) => {
-	const result = await courseServices.createIntoDB(req.body);
+	const result = await categoryServices.createIntoDB(req.body);
 
 	sendResponse(res, {
 		statusCode: 201,
-		message: "Course created successfully",
+		message: "Category created successfully",
 		result: result,
 	});
 });
 
 const getAllFromDB = asyncHandler(async (req: Request, res: Response) => {
-	const result = await courseServices.getAllFromDB(req.query as {});
+	const result = await categoryServices.getAllFromDB();
 
 	sendResponse(res, {
 		statusCode: 200,
-		message: "Course fetched successfully",
+		message: "Category fetched successfully",
 		result: result,
 	});
 });
 
 const getById = asyncHandler(async (req: Request, res: Response) => {
-	const result = await courseServices.getById(req.params.id);
+	const result = await categoryServices.getById(req.params.id);
 
 	sendResponse(res, {
 		statusCode: 200,
-		message: "Course fetched successfully",
+		message: "Category fetched successfully",
 		result: result,
 	});
 });
 
 const getBySlug = asyncHandler(async (req: Request, res: Response) => {
-	const result = await courseServices.getBySlug(req.params.slug);
+	const result = await categoryServices.getBySlug(req.params.slug);
 
 	sendResponse(res, {
 		statusCode: 200,
-		message: "Course fetched successfully",
+		message: "Category fetched successfully",
 		result: result,
 	});
 });
 
 const updateDoc = asyncHandler(async (req: Request, res: Response) => {
 	const { id } = req.params;
-	const result = await courseServices.updateDoc(id, req.body);
+	const result = await categoryServices.updateDoc(id, req.body);
 
 	sendResponse(res, {
 		statusCode: 200,
-		message: "Course updated successfully",
+		message: "Category updated successfully",
 		result: result,
 	});
 });
 
 const deleteDoc = asyncHandler(async (req: Request, res: Response) => {
-	const result = await courseServices.deleteDoc(req.params.id);
+	const result = await categoryServices.deleteDoc(req.params.id);
 
 	sendResponse(res, {
 		statusCode: 200,
-		message: "Course deleted successfully",
+		message: "Category deleted successfully",
 		result: result,
 	});
 });
 
-const popularCourses = asyncHandler(async (req: Request, res: Response) => {
-	const result = await courseServices.popularCourses();
-
-	sendResponse(res, {
-		statusCode: 200,
-		message: "Course deleted successfully",
-		result: result,
-	});
-});
-
-export const courseController = {
+export const categoryController = {
 	createIntoDB,
 	getAllFromDB,
 	getById,
 	getBySlug,
 	updateDoc,
 	deleteDoc,
-
-	popularCourses,
 };

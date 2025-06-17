@@ -16,6 +16,10 @@ const userSchema = new Schema<IUser>(
 			lowercase: true,
 			trim: true,
 		},
+		phone: {
+			type: String,
+			trim: true,
+		},
 		avatar: {
 			type: String,
 			trim: true,
@@ -29,13 +33,6 @@ const userSchema = new Schema<IUser>(
 			enum: ["student", "instructor", "admin"],
 			default: "student",
 		},
-
-		enrolledCourses: [
-			{
-				type: Schema.Types.ObjectId,
-				ref: "Enrollment",
-			},
-		],
 		isDeleted: {
 			type: Boolean,
 			default: false,

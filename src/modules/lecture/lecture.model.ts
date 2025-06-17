@@ -7,10 +7,6 @@ const lectureSchema = new Schema<ILecture>(
 			type: String,
 			required: [true, "Lecture title is required"],
 		},
-		slug: {
-			type: String,
-			unique: true,
-		},
 		type: {
 			type: String,
 			enum: ["video", "text", "pdf"],

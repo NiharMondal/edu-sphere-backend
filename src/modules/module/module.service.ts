@@ -16,15 +16,18 @@ const createIntoDB = async (courseId: string, payload: IModule) => {
 		throw new CustomError(404, "Requested course is not found!");
 	}
 
-	// checking module exist or not
-	const existedModule = await Module.findOne({
+	const module = await Module.findOne({
 		title: payload.title,
-		course: courseId,
+		course: payload.course,
 	});
 
-	if (existedModule) {
-		throw new CustomError(302, "Module title is already exist!");
+	if (module) {
+		throw new CustomError(400, "Title should be unique");
 	}
+	const lastModule = await Module.findOne({ course: payload.course }).sort({
+		index: -1,
+	});
+	const newIndex = lastModule ? lastModule.index + 1 : 1;
 
 	const session = await mongoose.startSession();
 	session.startTransaction();
@@ -32,7 +35,7 @@ const createIntoDB = async (courseId: string, payload: IModule) => {
 	try {
 		//first transaction -> creating module
 		const slug = generateSlug(payload.title); //generating slug
-		const newModule = new Module({ ...payload, slug });
+		const newModule = new Module({ ...payload, slug, index: newIndex });
 		await newModule.save({ session });
 
 		//second transaction -> updating course collection
