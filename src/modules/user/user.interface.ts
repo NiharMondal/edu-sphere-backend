@@ -1,4 +1,4 @@
-import { Types } from "mongoose";
+type TRole = "student" | "instructor" | "admin";
 
 export interface IUser {
 	name: string;
@@ -6,7 +6,6 @@ export interface IUser {
 	avatar: string;
 	password: string;
 	phone: string;
-	role: string;
-
+	role: TRole;
 	isDeleted: boolean;
 }

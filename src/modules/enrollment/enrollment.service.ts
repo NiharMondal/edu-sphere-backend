@@ -10,11 +10,15 @@ import { IModule } from "../module/module.interface";
 import { ILecture } from "../lecture/lecture.interface";
 import { Progress } from "../progress/progress.model";
 
+import Stripe from "stripe";
+import { envConfig } from "../../config";
 type ExtendLecture = ILecture & { _id: Types.ObjectId };
 
 type PopulatedModule = IModule & {
 	lectures: ExtendLecture[];
 };
+const stripe = new Stripe(envConfig.stripe_secret_key!);
+
 const createIntoDB = async (payload: IEnrollment) => {
 	const student = await User.findById(payload.student);
 	if (!student) {
@@ -35,7 +39,14 @@ const createIntoDB = async (payload: IEnrollment) => {
 	if (!course) {
 		throw new CustomError(404, "Course not found!");
 	}
+	const existedEnrollment = await Enrollment.findOne({
+		course: payload.course,
+		student: payload.student,
+	});
 
+	if (existedEnrollment) {
+		throw new CustomError(400, "You have already enrolled this course");
+	}
 	// 1. Get all modules for the course sorted by index
 	const modules = await Module.find({ course: payload.course })
 		.sort({ index: 1 }) // assuming your "index" field determines order
@@ -57,39 +68,80 @@ const createIntoDB = async (payload: IEnrollment) => {
 
 	const session = await mongoose.startSession();
 	session.startTransaction();
-	try {
-		const progressData = new Progress({
-			...payload,
-			lastWatchedLecture: firstLecture,
-		});
-		await progressData.save({ session }); // 1st: creating progress for the requested course
 
-		const data = new Enrollment({
-			...payload,
-			progress: progressData._id,
-		});
-		await data.save({ session }); //2nd: creating enrollment or purchase
+	if (course.pricingType === "paid") {
+		try {
+			const progressData = new Progress({
+				...payload,
+				lastWatchedLecture: firstLecture,
+			});
+			await progressData.save({ session }); // 1st: creating progress for the requested course
 
-		await Course.findByIdAndUpdate(data.course, {
-			$push: {
-				students: data.student,
-			},
-		}).session(session); // 3rd: updating course collection and inserting student ID
+			const enrollment = new Enrollment({
+				course: payload.course,
+				student: payload.student,
+				progress: progressData._id,
+			});
 
-		await User.findByIdAndUpdate(data.student, {
-			$push: {
-				enrolledCourses: data._id,
-			},
-		}).session(session); // 4th: updating user collection and inserting enrolled ID to users' enrolledCourses field
+			const stripeSession = await stripe.checkout.sessions.create({
+				payment_method_types: ["card"],
+				mode: "payment",
+				line_items: [
+					{
+						price_data: {
+							currency: "usd",
+							product_data: { name: course.title },
+							unit_amount: payload.amount * 100,
+						},
+						quantity: 1,
+					},
+				],
 
-		await session.commitTransaction();
-		session.endSession();
+				success_url: `${envConfig.front_end_url}/success?session_id={CHECKOUT_SESSION_ID}`,
+				cancel_url: `${envConfig.front_end_url}/cancel`,
+				metadata: {
+					student: payload.student.toString(),
+					course: payload.course.toString(),
+					enrollmentId: enrollment._id.toString(),
+				},
+			} satisfies Stripe.Checkout.SessionCreateParams);
 
-		return data;
-	} catch (error) {
-		await session.commitTransaction();
-		session.endSession();
-		throw new CustomError(400, "Could not enrolled course");
+			await enrollment.save({ session });
+
+			await session.commitTransaction();
+			await session.endSession();
+
+			return { url: stripeSession.url };
+		} catch (error) {
+			console.log(error);
+			await session.abortTransaction();
+			await session.endSession();
+			throw new CustomError(400, "Could not enrolled course");
+		}
+	} else {
+		try {
+			const progressData = new Progress({
+				...payload,
+				lastWatchedLecture: firstLecture,
+			});
+			await progressData.save({ session }); // 1st: creating progress for the requested course
+
+			const data = new Enrollment({
+				course: payload.course,
+				student: payload.student,
+				progress: progressData._id,
+			});
+			await data.save({ session }); //2nd: creating enrollment or purchase
+
+			await session.commitTransaction();
+			session.endSession();
+
+			return data;
+		} catch (error) {
+			await session.commitTransaction();
+			session.endSession();
+			throw new CustomError(400, "Could not enrolled course");
+		}
 	}
 };
 

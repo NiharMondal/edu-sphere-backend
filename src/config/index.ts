@@ -11,4 +11,8 @@ export const envConfig = {
 	front_end_url: process.env.FRONT_END_URL,
 	jwt_secret: process.env.JWT_SECRET,
 	jwt_expire: process.env.JWT_EXPIRE,
+	//stripe key
+	stripe_public_key: process.env.STRIPE_PUBLIC_KEY,
+	stripe_secret_key: process.env.STRIPE_SECRET_KEY,
+	stripe_web_secret: process.env.STRIPE_WEBHOOK_SECRET,
 };

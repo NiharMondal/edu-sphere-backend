@@ -13,6 +13,11 @@ const enrollmentSchema = new Schema<IEnrollment>(
 			ref: "Course",
 			required: [true, "Course ID is required"],
 		},
+		status: {
+			type: String,
+			enum: ["pending", "paid"],
+			default: "pending",
+		},
 
 		enrolledAt: {
 			type: Date,

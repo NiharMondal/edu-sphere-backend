@@ -18,6 +18,7 @@ const courseSchema = new Schema<ICourse>(
 		},
 		level: {
 			type: String,
+			enum: ["Beginner", "Intermediate", "Expert"],
 			default: "Beginner",
 		},
 		duration: {

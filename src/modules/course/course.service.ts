@@ -149,6 +149,7 @@ const getBySlug = async (slug: string) => {
 		{
 			$project: {
 				title: 1,
+				price: 1,
 				description: 1,
 				thumbnail: 1,
 				instructor: { $arrayElemAt: ["$instructor", 0] },

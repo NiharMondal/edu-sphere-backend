@@ -4,6 +4,7 @@ import { courseRoute } from "../modules/course/course.routes";
 import { enrollmentRoute } from "../modules/enrollment/enrollment.routes";
 import { lectureRoute } from "../modules/lecture/lecture.routes";
 import { moduleRoute } from "../modules/module/module.routes";
+import { paymentRoute } from "../modules/payment/payment.routes";
 import { progressRoute } from "../modules/progress/progress.routes";
 import { reviewRoute } from "../modules/review/review.routes";
 import { userRoute } from "../modules/user/user.routes";
