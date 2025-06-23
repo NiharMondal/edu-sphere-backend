@@ -19,4 +19,5 @@ export const routesArray = [
 	{ path: "/progress", route: progressRoute },
 	{ path: "/reviews", route: reviewRoute },
 	{ path: "/users", route: userRoute },
+	{ path: "/payments", route: paymentRoute },
 ];

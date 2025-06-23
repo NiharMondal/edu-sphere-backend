@@ -29,52 +29,12 @@ const createIntoDB = async (courseId: string, payload: IModule) => {
 	});
 	const newIndex = lastModule ? lastModule.index + 1 : 1;
 
-	const session = await mongoose.startSession();
-	session.startTransaction();
+	const result = await Module.create({ ...payload, index: newIndex });
 
-	try {
-		//first transaction -> creating module
-		const slug = generateSlug(payload.title); //generating slug
-		const newModule = new Module({ ...payload, slug, index: newIndex });
-		await newModule.save({ session });
-
-		//second transaction -> updating course collection
-		const updateResult = await Course.findOneAndUpdate(
-			{ _id: courseId },
-			{
-				$push: {
-					modules: newModule._id,
-				},
-			},
-			{ session, new: true }
-		);
-
-		// If course update failed, abort transaction
-		if (!updateResult) {
-			await session.abortTransaction();
-			session.endSession();
-			throw new CustomError(
-				400,
-				"Failed to update course with new module"
-			);
-		}
-
-		//commit session
-		await session.commitTransaction();
-		session.endSession();
-
-		return newModule;
-	} catch (error) {
-		await session.abortTransaction();
-		session.endSession();
-
-		throw new CustomError(500, "Could not create module");
-	}
+	return result;
 };
 
 const getAllFromDB = async (query: Record<string, string>) => {
-	const { search } = query;
-
 	const modules = await Module.find()
 		.populate({
 			path: "course",
@@ -83,7 +43,7 @@ const getAllFromDB = async (query: Record<string, string>) => {
 		.populate({
 			path: "lectures",
 		})
-		.sort({ createdAt: "desc" });
+		.sort({ createdAt: "asc" });
 
 	return modules;
 };

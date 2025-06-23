@@ -25,7 +25,10 @@ const createIntoDB = async (payload: ICourse) => {
 	}
 
 	const slug = generateSlug(payload.title);
-	const data = await Course.create({ ...payload, slug: slug });
+	const data = await Course.create({
+		...payload,
+		slug: slug,
+	});
 
 	return data;
 };
@@ -53,6 +56,7 @@ const getAllFromDB = async (
 const getById = async (id: string) => {
 	const data = await Course.findById(id)
 		.populate({ path: "instructor", select: "name avatar" })
+		.populate({ path: "category", select: "name" })
 		.populate({
 			path: "modules",
 			populate: {

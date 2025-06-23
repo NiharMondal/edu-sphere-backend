@@ -1,7 +1,5 @@
 import mongoose from "mongoose";
-import { generateSlug } from "../../utils";
 import CustomError from "../../utils/CustomError";
-import { Course } from "../course/course.model";
 import { Module } from "../module/module.model";
 import { ILecture } from "./lecture.interface";
 import { Lecture } from "./lecture.model";
@@ -27,8 +25,7 @@ const createIntoDB = async (moduleId: string, payload: ILecture) => {
 	session.startTransaction();
 
 	try {
-		const slug = generateSlug(payload.title);
-		const newLecture = new Lecture({ ...payload, slug });
+		const newLecture = new Lecture(payload);
 		await newLecture.save({ session }); // first transaction -> create lecture
 
 		//second tran -> update module collection
@@ -65,8 +62,14 @@ const createIntoDB = async (moduleId: string, payload: ILecture) => {
 };
 
 const getAllFromDB = async (query: Record<string, string>) => {
-	const { search } = query;
-	const data = await Lecture.find().populate("module", "title");
+	const data = await Lecture.find().populate({
+		path: "module",
+		select: "title course",
+		populate: {
+			path: "course",
+			select: "title",
+		},
+	});
 
 	return data;
 };

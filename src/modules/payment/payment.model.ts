@@ -19,6 +19,14 @@ const paymentHistorySchema = new Schema<IPayment>(
 			type: Number,
 			required: [true, "Course Amount is required"],
 		},
+		currency: String,
+		paymentStatus: String,
+		paymentIntentId: String,
+		customerDetails: {
+			email: String,
+			name: String,
+			address: Schema.Types.Mixed,
+		},
 	},
 	{ timestamps: true }
 );

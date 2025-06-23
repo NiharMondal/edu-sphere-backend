@@ -89,9 +89,9 @@ const createIntoDB = async (payload: IEnrollment) => {
 				line_items: [
 					{
 						price_data: {
-							currency: "usd",
+							currency: "bdt",
 							product_data: { name: course.title },
-							unit_amount: payload.amount * 100,
+							unit_amount: Math.round(payload.amount * 100),
 						},
 						quantity: 1,
 					},

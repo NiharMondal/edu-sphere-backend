@@ -8,6 +8,5 @@ export interface ILecture {
 	content: string;
 	duration: number;
 	module: Types.ObjectId;
-
 	isDeleted: boolean;
 }

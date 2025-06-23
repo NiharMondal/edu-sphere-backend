@@ -5,7 +5,10 @@ import rootRoutes from "./routes";
 import notFoundRoute from "./middleware/notFoundRoute";
 
 import globalErrorHandler from "./middleware/globalErrorHandler";
-import { paymentRoute } from "./modules/payment/payment.routes";
+import {
+	paymentRoute,
+	stripeWebhooksRoutes,
+} from "./modules/payment/payment.routes";
 
 const app: Application = express();
 

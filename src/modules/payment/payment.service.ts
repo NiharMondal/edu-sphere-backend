@@ -6,12 +6,12 @@ import { PaymentHistory } from "./payment.model";
 import { envConfig } from "../../config";
 
 const stripe = new Stripe(envConfig.stripe_secret_key as string);
-const endpointSecret = envConfig.stripe_web_secret as string;
+const webhookSecret = envConfig.stripe_web_secret as string;
 
 const createIntoDB = async (body: any, sig: any) => {
 	let event;
 	try {
-		event = stripe.webhooks.constructEvent(body, sig!, endpointSecret!);
+		event = stripe.webhooks.constructEvent(body, sig!, webhookSecret);
 	} catch (err) {
 		throw new CustomError(400, `Webhook Error: ${err as any}.message`);
 	}
@@ -29,15 +29,25 @@ const createIntoDB = async (body: any, sig: any) => {
 
 		// 2. Save Payment History
 		await PaymentHistory.create({
-			student: session.metadata?.student,
-			course: session.metadata?.course,
-			amount: session.amount_total! / 100,
-			currency: session.currency,
-			paymentStatus: session.payment_status,
-			paymentIntentId: session.payment_intent,
-			checkoutSessionId: session.id,
+			student: session?.metadata?.student,
+			course: session?.metadata?.course,
+			amount: session?.amount_total! / 100,
+			currency: session!.currency,
+			paymentStatus: session?.payment_status,
+			paymentIntentId: session?.payment_intent,
+			checkoutSessionId: session?.id,
+			customerDetails: {
+				email: session?.customer_details?.email,
+				name: session?.customer_details?.name,
+				address: session?.customer_details?.address,
+			},
 		});
 	}
 };
 
-export const paymentServices = { createIntoDB };
+const getAllFromDB = async () => {
+	const res = await PaymentHistory.find();
+	return res;
+};
+
+export const paymentServices = { createIntoDB, getAllFromDB };

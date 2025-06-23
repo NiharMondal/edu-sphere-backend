@@ -7,7 +7,10 @@ const categorySchema = new Schema<ICategory>({
 		required: [true, "Category name is required"],
 		unique: true,
 	},
-	slug: String, // will be auto generated
+	slug: {
+		type: String,
+		unique: [true, "Slug should be unique"],
+	}, // will be auto generated
 	icon: String,
 
 	isDeleted: {

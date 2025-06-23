@@ -14,5 +14,14 @@ const createIntoDB = asyncHandler(async (req: Request, res: Response) => {
 		result: data,
 	});
 });
+const getAllFromDB = asyncHandler(async (req: Request, res: Response) => {
+	const data = await paymentServices.getAllFromDB();
 
-export const paymentController = { createIntoDB };
+	sendResponse(res, {
+		statusCode: 200,
+		message: "Payment fetched successfully",
+		result: data,
+	});
+});
+
+export const paymentController = { createIntoDB, getAllFromDB };

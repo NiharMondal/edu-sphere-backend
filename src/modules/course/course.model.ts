@@ -14,7 +14,6 @@ const courseSchema = new Schema<ICourse>(
 		},
 		shortVideo: {
 			type: String,
-			default: null,
 		},
 		level: {
 			type: String,

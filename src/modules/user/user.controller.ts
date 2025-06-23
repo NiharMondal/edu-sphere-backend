@@ -5,7 +5,7 @@ import { userServices } from "./user.service";
 import { Types } from "mongoose";
 
 const getAllFromDB = asyncHandler(async (req: Request, res: Response) => {
-	const result = await userServices.getAllFromDB();
+	const result = await userServices.getAllFromDB(req.query as {});
 
 	sendResponse(res, {
 		statusCode: 200,

@@ -14,7 +14,7 @@ router.post(
 
 //only admin can update and delete
 router
-	.route("/admin/:id")
+	.route("/:id")
 	.patch(moduleController.updateDoc)
 	.delete(moduleController.deleteDoc);
 
@@ -23,4 +23,5 @@ router.get("/:id", moduleController.getById);
 
 //get all module
 router.get("/", moduleController.getAllFromDB);
+
 export const moduleRoute = router;

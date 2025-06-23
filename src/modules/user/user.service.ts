@@ -2,11 +2,16 @@ import { Types } from "mongoose";
 import CustomError from "../../utils/CustomError";
 import { IUser } from "./user.interface";
 import { User } from "./user.model";
+import QueryBuilder from "../../lib/QueryBuilder";
 
-const getAllFromDB = async () => {
-	const res = await User.find().select("-password");
+const getAllFromDB = async (query: Record<string, string>) => {
+	const res = new QueryBuilder(User.find(), query)
+		.search(["name"])
+		.filter()
+		.fields();
+	const users = await res.queryModel;
 
-	return res;
+	return users;
 };
 
 const getUserById = async (id: string) => {

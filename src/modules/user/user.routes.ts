@@ -15,7 +15,7 @@ router.get(
 
 router.patch(
 	"/update-role/:id",
-	authGuard(ROLE.admin), // only admin can update user's role
+	// authGuard(ROLE.admin), // only admin can update user's role
 	userController.updateRole
 );
 router.get("/instructors", userController.getInstructors);

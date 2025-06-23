@@ -1,3 +1,4 @@
+import QueryBuilder from "../../lib/QueryBuilder";
 import { generateSlug } from "../../utils";
 import CustomError from "../../utils/CustomError";
 import { ICategory } from "./category.interface";
@@ -11,8 +12,9 @@ const createIntoDB = async (payload: ICategory) => {
 	return data;
 };
 
-const getAllFromDB = async () => {
-	const data = await Category.find();
+const getAllFromDB = async (query: Record<string, string>) => {
+	const res = new QueryBuilder(Category.find(), query).search(["name"]);
+	const data = await res.queryModel;
 
 	return data;
 };
