@@ -15,7 +15,8 @@ const createIntoDB = asyncHandler(async (req: Request, res: Response) => {
 	});
 });
 const getAllFromDB = asyncHandler(async (req: Request, res: Response) => {
-	const data = await paymentServices.getAllFromDB();
+	const query = req.query;
+	const data = await paymentServices.getAllFromDB(query as {});
 
 	sendResponse(res, {
 		statusCode: 200,

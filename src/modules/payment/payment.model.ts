@@ -5,11 +5,13 @@ const paymentHistorySchema = new Schema<IPayment>(
 	{
 		student: {
 			type: Schema.Types.ObjectId,
-			required: [true, "User is required"],
+			required: [true, "Student ID is required"],
+			ref: "User",
 		},
 		course: {
 			type: Schema.Types.ObjectId,
-			required: [true, "Course is required"],
+			required: [true, "Course ID is required"],
+			ref: "Course",
 		},
 		checkoutSessionId: {
 			type: String,

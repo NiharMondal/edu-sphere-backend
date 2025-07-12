@@ -5,6 +5,9 @@ import { Lecture } from "../lecture/lecture.model";
 import { IModule } from "./module.interface";
 import { Module } from "./module.model";
 import { generateSlug } from "../../utils";
+import { Enrollment } from "../enrollment/enrollment.model";
+import { Notification } from "../notification/notification.model";
+import { getIO } from "../../socket";
 
 const createIntoDB = async (courseId: string, payload: IModule) => {
 	// double checking by courseId and params
@@ -29,9 +32,56 @@ const createIntoDB = async (courseId: string, payload: IModule) => {
 	});
 	const newIndex = lastModule ? lastModule.index + 1 : 1;
 
-	const result = await Module.create({ ...payload, index: newIndex });
+	const session = await mongoose.startSession();
+	session.startTransaction();
 
-	return result;
+	try {
+		const module = new Module({
+			...payload,
+			index: newIndex,
+		});
+		await module.save({ session }); //first step
+
+		const enrollments = await Enrollment.find({
+			course: payload.course,
+		}).session(session); // second step: this step is for creating notification
+
+		for (const enrollment of enrollments) {
+			const notification = new Notification({
+				student: enrollment.student,
+				message: `Module ${module.index}: ${module.title} has been released`,
+				type: "module-update",
+			});
+
+			await notification.save({ session }); // third step: saving notifications
+
+			const io = getIO();
+
+			io.to(enrollment.student.toString()).emit(
+				"new-notification",
+				notification
+			);
+		}
+		await Course.findByIdAndUpdate(
+			{ _id: module.course },
+			{
+				$push: {
+					modules: module._id,
+				},
+			},
+			{ new: true, runValidators: true }
+		).session(session); // forth step: saving modules to course model
+
+		await session.commitTransaction();
+		await session.endSession();
+
+		return module;
+	} catch (error) {
+		await session.abortTransaction();
+		await session.endSession();
+		console.log(error);
+		throw new CustomError(400, "Could not create module");
+	}
 };
 
 const getAllFromDB = async (query: Record<string, string>) => {
@@ -43,7 +93,7 @@ const getAllFromDB = async (query: Record<string, string>) => {
 		.populate({
 			path: "lectures",
 		})
-		.sort({ createdAt: "asc" });
+		.sort({ createdAt: "desc" });
 
 	return modules;
 };
@@ -116,6 +166,21 @@ const deleteDoc = async (id: string) => {
 	}
 };
 
+const assignedModuleToInstructor = async (insId: string) => {
+	const courses = await Course.find({ instructor: insId });
+	const courseIds = courses.map((c) => c._id);
+	const modules = await Module.find({ course: { $in: courseIds } })
+		.populate({
+			path: "course",
+			select: "title",
+		})
+		.populate({
+			path: "lectures",
+		})
+		.sort({ createdAt: "desc" });
+
+	return modules;
+};
 export const moduleServices = {
 	createIntoDB,
 	getAllFromDB,
@@ -124,4 +189,6 @@ export const moduleServices = {
 
 	updateDoc,
 	deleteDoc,
+
+	assignedModuleToInstructor,
 };

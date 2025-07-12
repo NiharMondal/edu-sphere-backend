@@ -1,8 +1,9 @@
-import mongoose from "mongoose";
+import mongoose, { ObjectId, Schema } from "mongoose";
 import CustomError from "../../utils/CustomError";
 import { Module } from "../module/module.model";
 import { ILecture } from "./lecture.interface";
 import { Lecture } from "./lecture.model";
+import { Course } from "../course/course.model";
 
 const createIntoDB = async (moduleId: string, payload: ILecture) => {
 	// double checking by moduleId and params
@@ -113,6 +114,25 @@ const deleteDoc = async (id: string) => {
 	return data;
 };
 
+const assignedLectureToInstructor = async (insId: string) => {
+	const courses = await Course.find({ instructor: insId });
+	const courseIds = courses.map((c) => c._id);
+	const modules = await Module.find({ course: { $in: courseIds } });
+
+	const modulesId = modules.map((m) => m?._id);
+
+	const lectures = await Lecture.find({
+		module: { $in: modulesId },
+	}).populate({
+		path: "module",
+		select: "title course",
+		populate: {
+			path: "course",
+			select: "title",
+		},
+	});
+	return lectures;
+};
 export const lectureServices = {
 	createIntoDB,
 	getAllFromDB,
@@ -120,4 +140,6 @@ export const lectureServices = {
 
 	updateDoc,
 	deleteDoc,
+
+	assignedLectureToInstructor,
 };

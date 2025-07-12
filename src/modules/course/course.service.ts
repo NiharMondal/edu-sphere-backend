@@ -7,6 +7,7 @@ import { Module } from "../module/module.model";
 import { ICourse } from "./course.interface";
 import { Course } from "./course.model";
 import { User } from "../user/user.model";
+import { TQuery } from "../../type";
 
 const createIntoDB = async (payload: ICourse) => {
 	const existedCourse = await Course.findOne({ slug: payload.slug });
@@ -33,23 +34,15 @@ const createIntoDB = async (payload: ICourse) => {
 	return data;
 };
 
-const getAllFromDB = async (
-	query: Record<string, string | string[] | undefined>
-) => {
-	const res = new QueryBuilder(Course.find(), query)
+const getAllFromDB = async (query: TQuery) => {
+	const res = new QueryBuilder(Course.find({ isDeleted: false }), query)
 		.search(["title"])
 		.filter();
 	const courses = await res.queryModel.populate({
 		path: "instructor",
 		select: "name",
 	});
-	// .populate({
-	// 	path: "modules",
 
-	// 	populate: {
-	// 		path: "lectures",
-	// 	},
-	// });
 	return courses;
 };
 
@@ -255,6 +248,11 @@ const popularCourses = async () => {
 	return courses;
 };
 
+const getCoursesByInstructorId = async (id: string) => {
+	const courses = await Course.find({ instructor: id });
+
+	return courses;
+};
 export const courseServices = {
 	createIntoDB,
 	getAllFromDB,
@@ -264,4 +262,5 @@ export const courseServices = {
 	deleteDoc,
 
 	popularCourses,
+	getCoursesByInstructorId,
 };

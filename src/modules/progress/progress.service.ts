@@ -6,9 +6,15 @@ import { Lecture } from "../lecture/lecture.model";
 import { IModule } from "../module/module.interface";
 import { Progress } from "./progress.model";
 import { Module } from "../module/module.model";
+import QueryBuilder from "../../lib/QueryBuilder";
 
-const findAllCoursesProgress = async (studentId: string) => {
-	const data = Progress.find({ student: studentId });
+const getAllFromDB = async (query: Record<string, string>) => {
+	const data = new QueryBuilder(Progress.find(), query);
+	const progress = await data.queryModel;
+	return progress;
+};
+const getProgressByStudentId = async (studentId: string) => {
+	const data = await Progress.find({ student: studentId });
 
 	if (!data) {
 		throw new CustomError(404, "Progress data not found");
@@ -16,7 +22,21 @@ const findAllCoursesProgress = async (studentId: string) => {
 
 	return data;
 };
+const getProgressByStudentIdAndCourseId = async (
+	studentId: string,
+	courseId: string
+) => {
+	const data = await Progress.findOne({
+		student: studentId,
+		course: courseId,
+	});
 
+	if (!data) {
+		throw new CustomError(404, "Progress data not found");
+	}
+
+	return data;
+};
 /**
  *
  * @param courseId
@@ -80,6 +100,8 @@ const markLectureComplete = async (
 };
 
 export const progressServices = {
-	findAllCoursesProgress,
+	getAllFromDB,
+	getProgressByStudentId,
+	getProgressByStudentIdAndCourseId,
 	markLectureComplete,
 };

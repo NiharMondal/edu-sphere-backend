@@ -10,7 +10,7 @@ const lectureSchema = new Schema<ILecture>(
 		},
 		type: {
 			type: String,
-			enum: ["video", "text", "pdf"],
+			enum: ["video", "post"],
 			required: [true, "File type is required"],
 		},
 		content: {
@@ -19,9 +19,7 @@ const lectureSchema = new Schema<ILecture>(
 		},
 		duration: {
 			type: Number,
-			required: function () {
-				return this.type === "video";
-			},
+			required: [true, "Lecture duration is required"],
 		},
 
 		module: {

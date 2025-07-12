@@ -5,14 +5,11 @@ import rootRoutes from "./routes";
 import notFoundRoute from "./middleware/notFoundRoute";
 
 import globalErrorHandler from "./middleware/globalErrorHandler";
-import {
-	paymentRoute,
-	stripeWebhooksRoutes,
-} from "./modules/payment/payment.routes";
+import { stripeWebhooksRoutes } from "./modules/payment/payment.routes";
 
 const app: Application = express();
 
-app.use("/api/v1/stripe", paymentRoute);
+app.use("/api/v1/stripe", stripeWebhooksRoutes);
 app.use(express.json());
 
 app.use(

@@ -4,6 +4,7 @@ import CustomError from "../../utils/CustomError";
 import { Enrollment } from "../enrollment/enrollment.model";
 import { PaymentHistory } from "./payment.model";
 import { envConfig } from "../../config";
+import QueryBuilder from "../../lib/QueryBuilder";
 
 const stripe = new Stripe(envConfig.stripe_secret_key as string);
 const webhookSecret = envConfig.stripe_web_secret as string;
@@ -21,7 +22,7 @@ const createIntoDB = async (body: any, sig: any) => {
 		const session = event.data.object as Stripe.Checkout.Session;
 
 		// 1. Update Enrollment
-		await Enrollment.findByIdAndUpdate(session.metadata?.enrollmentId, {
+		await Enrollment.findByIdAndUpdate(session?.metadata?.enrollmentId, {
 			$set: {
 				status: "paid",
 			},
@@ -45,9 +46,15 @@ const createIntoDB = async (body: any, sig: any) => {
 	}
 };
 
-const getAllFromDB = async () => {
-	const res = await PaymentHistory.find();
-	return res;
+const getAllFromDB = async (query: Record<string, string>) => {
+	const data = new QueryBuilder(PaymentHistory.find(), query).sort();
+
+	const paymentHistory = await data.queryModel
+		.populate({ path: "student", select: "name" })
+		.populate({ path: "course", select: "title" })
+		.select("paymentIntentId student course amount");
+
+	return paymentHistory;
 };
 
 export const paymentServices = { createIntoDB, getAllFromDB };

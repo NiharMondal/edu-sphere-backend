@@ -55,6 +55,21 @@ const deleteDoc = asyncHandler(async (req: Request, res: Response) => {
 	});
 });
 
+const assignedLectureToInstructor = asyncHandler(
+	async (req: Request, res: Response) => {
+		const user = req.user;
+		const result = await lectureServices.assignedLectureToInstructor(
+			user.id
+		);
+
+		sendResponse(res, {
+			statusCode: 200,
+			message: "Assigned Lecture fetched successfully",
+			result: result,
+		});
+	}
+);
+
 export const lectureController = {
 	createIntoDB,
 	getAllFromDB,
@@ -62,4 +77,6 @@ export const lectureController = {
 
 	updateDoc,
 	deleteDoc,
+
+	assignedLectureToInstructor,
 };

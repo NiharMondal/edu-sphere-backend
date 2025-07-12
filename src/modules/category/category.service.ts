@@ -13,7 +13,10 @@ const createIntoDB = async (payload: ICategory) => {
 };
 
 const getAllFromDB = async (query: Record<string, string>) => {
-	const res = new QueryBuilder(Category.find(), query).search(["name"]);
+	const res = new QueryBuilder(
+		Category.find({ isDeleted: false }),
+		query
+	).search(["name"]);
 	const data = await res.queryModel;
 
 	return data;

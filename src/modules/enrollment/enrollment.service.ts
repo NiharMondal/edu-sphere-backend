@@ -12,6 +12,8 @@ import { Progress } from "../progress/progress.model";
 
 import Stripe from "stripe";
 import { envConfig } from "../../config";
+import { Notification } from "../notification/notification.model";
+import { getIO, getUserSocketMap } from "../../socket";
 type ExtendLecture = ILecture & { _id: Types.ObjectId };
 
 type PopulatedModule = IModule & {
@@ -20,6 +22,7 @@ type PopulatedModule = IModule & {
 const stripe = new Stripe(envConfig.stripe_secret_key!);
 
 const createIntoDB = async (payload: IEnrollment) => {
+	//find student by id
 	const student = await User.findById(payload.student);
 	if (!student) {
 		throw new CustomError(404, "Student not found!");
@@ -28,17 +31,19 @@ const createIntoDB = async (payload: IEnrollment) => {
 	//find course
 	const course = await Course.findById(payload.course).populate({
 		path: "modules",
+		select: "_id slug",
 		populate: {
 			path: "lectures",
 			select: "_id slug",
 			model: "Lecture",
 		},
-		select: "_id slug",
 	});
 
 	if (!course) {
 		throw new CustomError(404, "Course not found!");
 	}
+
+	//checking existing enrollment
 	const existedEnrollment = await Enrollment.findOne({
 		course: payload.course,
 		student: payload.student,
@@ -69,20 +74,84 @@ const createIntoDB = async (payload: IEnrollment) => {
 	const session = await mongoose.startSession();
 	session.startTransaction();
 
-	if (course.pricingType === "paid") {
+	if (course.pricingType === "free") {
 		try {
 			const progressData = new Progress({
 				...payload,
 				lastWatchedLecture: firstLecture,
 			});
-			await progressData.save({ session }); // 1st: creating progress for the requested course
+			await progressData.save({ session }); // 1st step: creating progress for the requested course
+
+			//creating enrollment
+			const enrollmentData = new Enrollment({
+				course: payload.course,
+				student: payload.student,
+				progress: progressData._id,
+				pricingType: course?.pricingType,
+			});
+
+			//creating notification
+			const notification = new Notification({
+				student: payload.student,
+				type: "enrollment",
+				message: `Welcome to ${course?.title}`,
+			});
+
+			await notification.save({ session }); // 2nd step: creating notification
+
+			const io = getIO();
+			const socketId = getUserSocketMap().get(
+				payload.student as unknown as string
+			);
+
+			if (socketId) {
+				io.to(socketId).emit("new-notification", notification);
+			}
+			await enrollmentData.save({ session }); //3rd step: at last creating enrollment data
+
+			//committing transaction
+			await session.commitTransaction();
+			session.endSession();
+
+			return enrollmentData;
+		} catch (error) {
+			console.log(error);
+			await session.abortTransaction();
+			session.endSession();
+			throw new CustomError(400, "Could not enrolled course");
+		}
+	} else {
+		try {
+			const progressData = new Progress({
+				...payload,
+				lastWatchedLecture: firstLecture,
+			});
+			await progressData.save({ session }); // 1st step: creating progress for the requested course
 
 			const enrollment = new Enrollment({
 				course: payload.course,
 				student: payload.student,
 				progress: progressData._id,
+				pricingType: course?.pricingType,
 			});
 
+			//creating notification
+			const notification = new Notification({
+				student: payload.student,
+				type: "enrollment",
+				message: `Welcome to ${course?.title}`,
+			});
+
+			await notification.save({ session }); // 2nd step: creating notification
+
+			const io = getIO();
+			const socketId = getUserSocketMap().get(
+				payload.student as unknown as string
+			);
+
+			if (socketId) {
+				io.to(socketId).emit("new-notification", notification);
+			}
 			const stripeSession = await stripe.checkout.sessions.create({
 				payment_method_types: ["card"],
 				mode: "payment",
@@ -106,7 +175,7 @@ const createIntoDB = async (payload: IEnrollment) => {
 				},
 			} satisfies Stripe.Checkout.SessionCreateParams);
 
-			await enrollment.save({ session });
+			await enrollment.save({ session }); // 3rd step: saving enrollment data
 
 			await session.commitTransaction();
 			await session.endSession();
@@ -116,30 +185,6 @@ const createIntoDB = async (payload: IEnrollment) => {
 			console.log(error);
 			await session.abortTransaction();
 			await session.endSession();
-			throw new CustomError(400, "Could not enrolled course");
-		}
-	} else {
-		try {
-			const progressData = new Progress({
-				...payload,
-				lastWatchedLecture: firstLecture,
-			});
-			await progressData.save({ session }); // 1st: creating progress for the requested course
-
-			const data = new Enrollment({
-				course: payload.course,
-				student: payload.student,
-				progress: progressData._id,
-			});
-			await data.save({ session }); //2nd: creating enrollment or purchase
-
-			await session.commitTransaction();
-			session.endSession();
-
-			return data;
-		} catch (error) {
-			await session.commitTransaction();
-			session.endSession();
 			throw new CustomError(400, "Could not enrolled course");
 		}
 	}
@@ -158,9 +203,14 @@ const getAllFromDB = async (
 
 const myEnrollment = async (id: string) => {
 	const res = await Enrollment.find({ student: id })
+
 		.populate({
 			path: "course",
-			select: "slug title thumbnail",
+			select: "title thumbnail instructor",
+			populate: {
+				path: "instructor",
+				select: "name",
+			},
 		})
 		.populate({
 			path: "progress",
@@ -169,7 +219,8 @@ const myEnrollment = async (id: string) => {
 				path: "lastWatchedLecture",
 				select: "type",
 			},
-		});
+		})
+		.sort({ createdAt: -1 });
 
 	return res;
 };

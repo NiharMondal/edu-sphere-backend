@@ -1,4 +1,3 @@
-import { Types } from "mongoose";
 import CustomError from "../../utils/CustomError";
 import { IUser } from "./user.interface";
 import { User } from "./user.model";
@@ -9,24 +8,18 @@ const getAllFromDB = async (query: Record<string, string>) => {
 		.search(["name"])
 		.filter()
 		.fields();
-	const users = await res.queryModel;
+	const users = await res.queryModel.select("-password");
 
 	return users;
 };
 
 const getUserById = async (id: string) => {
-	const res = await User.findById(id)
-		.select("-password")
-		.populate({
-			path: "enrolledCourses",
-			select: "course progress",
-			populate: {
-				path: "course",
-				select: "title price",
-			},
-		});
+	const user = await User.findById(id).select("-password");
 
-	return res;
+	if (!user || user?.isDeleted === true) {
+		throw new CustomError(404, "User not found");
+	}
+	return user;
 };
 
 const getInstructors = async () => {
@@ -40,13 +33,8 @@ const getInstructors = async () => {
 
 const updateDoc = async (
 	id: string,
-	payload: Pick<IUser, "name" | "email">
+	payload: Pick<IUser, "name" | "avatar" | "phone">
 ) => {
-	const existingUser = await User.findOne({ email: payload.email });
-
-	if (existingUser) {
-		throw new CustomError(302, "Email is already taken");
-	}
 	const res = await User.findByIdAndUpdate(
 		id,
 		{
@@ -55,7 +43,7 @@ const updateDoc = async (
 			},
 		},
 		{ new: true, runValidators: true }
-	);
+	).select("name email avatar phone");
 
 	if (!res) {
 		throw new CustomError(404, "User not found");
@@ -81,12 +69,13 @@ const updateRole = async (id: string, payload: { role: string }) => {
 };
 
 const getMyProfile = async (id: string) => {
-	const user = await User.findById(id).select("name email avatar");
+	const user = await User.findById(id).select("name role avatar");
 	if (!user) {
 		throw new CustomError(404, "User not found!");
 	}
 	return user;
 };
+
 export const userServices = {
 	getAllFromDB,
 	getUserById,

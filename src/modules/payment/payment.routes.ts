@@ -10,6 +10,6 @@ export const stripeWebhooksRoutes = router.post(
 	paymentController.createIntoDB
 );
 
-// router.get("/", paymentController.getAllFromDB);
+router.get("/", paymentController.getAllFromDB);
 
 export const paymentRoute = router;

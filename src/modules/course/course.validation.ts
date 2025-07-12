@@ -3,12 +3,12 @@ import { z } from "zod";
 const createCourse = z.object({
 	title: z
 		.string({ required_error: "Name is required" })
-		.min(3, "Should be more than 3 characters")
-		.max(50, "Should be less than 30 characters"),
+		.min(10, "Should be more than 10 characters")
+		.max(80, "Should be less than 80 characters"),
 	price: z.coerce
 		.number({ required_error: "Price is required" })
 		.positive({ message: "Price can not be negative" })
-		.max(2000, "Should be less than 30 characters"),
+		.max(15000, "Should be less than 15000 Taka"),
 	pricingType: z.enum(["paid", "free"]),
 	shortVideo: z
 		.string()

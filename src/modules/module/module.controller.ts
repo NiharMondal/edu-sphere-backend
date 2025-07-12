@@ -64,6 +64,18 @@ const deleteDoc = asyncHandler(async (req: Request, res: Response) => {
 		result: result,
 	});
 });
+const assignedModuleToInstructor = asyncHandler(
+	async (req: Request, res: Response) => {
+		const user = req.user;
+		const result = await moduleServices.assignedModuleToInstructor(user.id);
+
+		sendResponse(res, {
+			statusCode: 200,
+			message: "Module fetched by instructor successfully",
+			result: result,
+		});
+	}
+);
 
 export const moduleController = {
 	createIntoDB,
@@ -73,4 +85,6 @@ export const moduleController = {
 
 	updateDoc,
 	deleteDoc,
+
+	assignedModuleToInstructor,
 };

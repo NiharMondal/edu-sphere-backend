@@ -4,12 +4,8 @@ import slugify from "slugify";
 import CustomError from "./CustomError";
 
 export const generateToken = (payload: JwtPayload) => {
-	// const token = jwt.sign(payload, envConfig.jwt_secret!, {
-	// 	expiresIn,
-	// });
-
 	const token = jwt.sign(payload, envConfig.jwt_secret!, {
-		expiresIn: "2d",
+		expiresIn: "10d",
 	});
 	return token;
 };

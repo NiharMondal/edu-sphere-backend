@@ -1,6 +1,6 @@
 import { Types } from "mongoose";
 
-type Type = "video" | "text" | "pdf";
+type Type = "video" | "post";
 
 export interface ILecture {
 	title: string;

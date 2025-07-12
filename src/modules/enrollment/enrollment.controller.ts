@@ -22,7 +22,7 @@ const getAllFromDB = asyncHandler(async (req: Request, res: Response) => {
 	});
 });
 const myEnrollment = asyncHandler(async (req: Request, res: Response) => {
-	const { id } = req.params;
+	const { id } = req.user;
 	const result = await enrollmentServices.myEnrollment(id);
 
 	sendResponse(res, {
