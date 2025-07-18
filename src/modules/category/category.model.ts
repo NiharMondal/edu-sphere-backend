@@ -1,11 +1,12 @@
 import { model, Schema } from "mongoose";
 import { ICategory } from "./category.interface";
+import { Course } from "../course/course.model";
 
 const categorySchema = new Schema<ICategory>({
 	name: {
 		type: String,
 		required: [true, "Category name is required"],
-		unique: true,
+		unique: [true, "Category name should be unique"],
 	},
 	slug: {
 		type: String,

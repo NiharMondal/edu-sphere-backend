@@ -1,0 +1,13 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.progressRoute = void 0;
+const express_1 = require("express");
+const progress_controller_1 = require("./progress.controller");
+const authGuard_1 = require("../../middleware/authGuard");
+const constant_1 = require("../../constant");
+const router = (0, express_1.Router)();
+router.get("/course/:courseId", (0, authGuard_1.authGuard)(constant_1.ROLE.student), progress_controller_1.progressController.getProgressByStudentIdAndCourseId);
+router.get("/my-progress", (0, authGuard_1.authGuard)(constant_1.ROLE.student), progress_controller_1.progressController.getProgressByStudentId);
+router.post("/lecture/:lectureId", progress_controller_1.progressController.markLectureComplete);
+router.get("/", progress_controller_1.progressController.getAllFromDB);
+exports.progressRoute = router;

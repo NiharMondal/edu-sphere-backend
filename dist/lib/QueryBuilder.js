@@ -16,8 +16,7 @@ class QueryBuilder {
     }
     filter() {
         const queryCopy = Object.assign({}, this.query);
-        queryCopy["isDeleted"] = false;
-        const exludedFields = [
+        const excludedFields = [
             "search",
             "page",
             "limit",
@@ -28,8 +27,8 @@ class QueryBuilder {
             "fields",
         ];
         // deleting item from main query
-        exludedFields.forEach((field) => delete queryCopy[field]);
-        if (this.query) {
+        excludedFields.forEach((field) => delete queryCopy[field]);
+        if (this === null || this === void 0 ? void 0 : this.query) {
             this.queryModel = this.queryModel.find(queryCopy);
         }
         return this;
@@ -54,7 +53,7 @@ class QueryBuilder {
     budget() {
         var _a, _b;
         const minPrice = Number((_a = this === null || this === void 0 ? void 0 : this.query) === null || _a === void 0 ? void 0 : _a.minBudget) || 0;
-        const maxPrice = Number((_b = this === null || this === void 0 ? void 0 : this.query) === null || _b === void 0 ? void 0 : _b.maxBudget) || 12000;
+        const maxPrice = Number((_b = this === null || this === void 0 ? void 0 : this.query) === null || _b === void 0 ? void 0 : _b.maxBudget) || 50000;
         if (minPrice || maxPrice) {
             this.queryModel = this.queryModel.find({
                 budget: { $gte: minPrice, $lte: maxPrice },
@@ -65,8 +64,7 @@ class QueryBuilder {
     sort() {
         var _a, _b;
         const sortBy = ((_a = this.query) === null || _a === void 0 ? void 0 : _a.sortBy) || "createdAt";
-        const order = ((_b = this.query) === null || _b === void 0 ? void 0 : _b.order) || "desc";
-        const sortOrder = order === "asc" ? 1 : -1; // Determine sort order (default to decending)
+        const order = ((_b = this.query) === null || _b === void 0 ? void 0 : _b.order) || "asc";
         // Validate the sortBy field to ensure it's a valid key
         const validSortFields = [
             "title",
@@ -78,7 +76,7 @@ class QueryBuilder {
         if (sortBy || order) {
             if (validSortFields.includes(sortBy)) {
                 // Create a dynamic sort object
-                const sortObj = { [sortBy]: sortOrder };
+                const sortObj = { [sortBy]: order };
                 this.queryModel = this.queryModel.sort(sortObj);
             }
         }

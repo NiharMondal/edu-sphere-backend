@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 import asyncHandler from "../../utils/asyncHandler";
 import sendResponse from "../../utils/sendResponse";
 import { categoryServices } from "./category.service";
+import { TQuery } from "../../type";
 
 const createIntoDB = asyncHandler(async (req: Request, res: Response) => {
 	const result = await categoryServices.createIntoDB(req.body);
@@ -14,7 +15,8 @@ const createIntoDB = asyncHandler(async (req: Request, res: Response) => {
 });
 
 const getAllFromDB = asyncHandler(async (req: Request, res: Response) => {
-	const result = await categoryServices.getAllFromDB();
+	const query = req.query;
+	const result = await categoryServices.getAllFromDB(query as TQuery);
 
 	sendResponse(res, {
 		statusCode: 200,

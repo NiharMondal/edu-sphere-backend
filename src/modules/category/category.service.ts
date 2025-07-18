@@ -1,4 +1,5 @@
 import QueryBuilder from "../../lib/QueryBuilder";
+import { TQuery } from "../../type";
 import { generateSlug } from "../../utils";
 import CustomError from "../../utils/CustomError";
 import { ICategory } from "./category.interface";
@@ -12,12 +13,40 @@ const createIntoDB = async (payload: ICategory) => {
 	return data;
 };
 
-const getAllFromDB = async (query: Record<string, string>) => {
-	const res = new QueryBuilder(
-		Category.find({ isDeleted: false }),
-		query
-	).search(["name"]);
-	const data = await res.queryModel;
+const getAllFromDB = async (query: TQuery) => {
+	const data = await Category.aggregate([
+		// Match by name with case-insensitive regex
+		{
+			$match: {
+				isDeleted: false,
+				// name: { $regex: `${query.search}`, $options: "i" },
+			},
+		},
+
+		// Lookup related courses
+		{
+			$lookup: {
+				from: "courses",
+				localField: "_id",
+				foreignField: "category",
+				as: "courses",
+			},
+		},
+
+		// Add field for course count
+		{
+			$addFields: {
+				courseCount: { $size: "$courses" },
+			},
+		},
+
+		// Optionally exclude the full courses array
+		{
+			$project: {
+				courses: 0,
+			},
+		},
+	]);
 
 	return data;
 };

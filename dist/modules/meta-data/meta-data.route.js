@@ -1,0 +1,11 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.metaRoute = void 0;
+const express_1 = require("express");
+const meta_data_controller_1 = require("./meta-data.controller");
+const authGuard_1 = require("../../middleware/authGuard");
+const constant_1 = require("../../constant");
+const router = (0, express_1.Router)();
+router.get("/revenue", (0, authGuard_1.authGuard)(constant_1.ROLE.admin), meta_data_controller_1.metaDataController.revenue);
+router.get("/general-information", (0, authGuard_1.authGuard)(constant_1.ROLE.admin), meta_data_controller_1.metaDataController.generalInformation);
+exports.metaRoute = router;

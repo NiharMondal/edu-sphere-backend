@@ -3,6 +3,7 @@ import asyncHandler from "../../utils/asyncHandler";
 import sendResponse from "../../utils/sendResponse";
 
 import { authServices } from "./auth.service";
+import { envConfig } from "../../config";
 
 //register user
 const registerUser = asyncHandler(async (req: Request, res: Response) => {
@@ -19,10 +20,28 @@ const registerUser = asyncHandler(async (req: Request, res: Response) => {
 const loginUser = asyncHandler(async (req: Request, res: Response) => {
 	const result = await authServices.loginUser(req.body);
 
+	const { accessToken, refreshToken } = result;
+
+	res.cookie("accessToken", accessToken, {
+		httpOnly: false, // set to true if you don't need to read it from JS
+		maxAge: 30 * 60 * 1000, // 15 minutes
+		secure: envConfig.node_env === "production",
+		sameSite: "lax",
+		path: "/",
+	});
+
+	res.cookie("refreshToken", refreshToken, {
+		httpOnly: true,
+		secure: true,
+		maxAge: 30 * 24 * 60 * 60 * 1000, // 7 days
+		sameSite: "none",
+		path: "/",
+	});
+
 	sendResponse(res, {
 		statusCode: 200,
 		message: "User logged in successfully",
-		result: result,
+		result: { accessToken },
 	});
 });
 const changePassword = asyncHandler(async (req: Request, res: Response) => {
@@ -35,4 +54,47 @@ const changePassword = asyncHandler(async (req: Request, res: Response) => {
 		result: result,
 	});
 });
-export const authController = { registerUser, loginUser, changePassword };
+
+const getRefreshToken = asyncHandler(async (req: Request, res: Response) => {
+	const refreshToken = req.cookies.refreshToken;
+
+	const result = await authServices.getRefreshToken(refreshToken);
+
+	sendResponse(res, {
+		statusCode: 200,
+		message: "New access token retrieved successfully",
+		result: result,
+	});
+});
+
+const loggedOut = asyncHandler(async (req: Request, res: Response) => {
+	res.clearCookie("accessToken", {
+		path: "/",
+		sameSite: "lax",
+		secure: envConfig.node_env === "production",
+		httpOnly: false,
+	});
+
+	res.clearCookie("refreshToken", {
+		path: "/",
+		sameSite: "none",
+		secure: true,
+		httpOnly: true,
+	});
+
+	sendResponse(res, {
+		statusCode: 200,
+		message: "Logged out successfully",
+		result: {
+			message: "Ok",
+		},
+	});
+});
+export const authController = {
+	registerUser,
+	loginUser,
+	changePassword,
+	getRefreshToken,
+
+	loggedOut,
+};

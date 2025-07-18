@@ -1,15 +1,18 @@
 import express, { Application } from "express";
 import cors from "cors";
+import cookieParser from "cookie-parser";
 
 import rootRoutes from "./routes";
+
 import notFoundRoute from "./middleware/notFoundRoute";
 
 import globalErrorHandler from "./middleware/globalErrorHandler";
 import { stripeWebhooksRoutes } from "./modules/payment/payment.routes";
 
 const app: Application = express();
-
 app.use("/api/v1/stripe", stripeWebhooksRoutes);
+
+app.use(cookieParser());
 app.use(express.json());
 
 app.use(

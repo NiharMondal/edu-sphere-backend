@@ -41,6 +41,14 @@ const getById = (0, asyncHandler_1.default)((req, res) => __awaiter(void 0, void
         result: result,
     });
 }));
+const getByCourseId = (0, asyncHandler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const result = yield module_service_1.moduleServices.getByCourseId(req.params.courseId);
+    (0, sendResponse_1.default)(res, {
+        statusCode: 200,
+        message: "Module fetched successfully by course ID",
+        result: result,
+    });
+}));
 const updateDoc = (0, asyncHandler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { id } = req.params;
     const result = yield module_service_1.moduleServices.updateDoc(id, req.body);
@@ -58,10 +66,21 @@ const deleteDoc = (0, asyncHandler_1.default)((req, res) => __awaiter(void 0, vo
         result: result,
     });
 }));
+const assignedModuleToInstructor = (0, asyncHandler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const user = req.user;
+    const result = yield module_service_1.moduleServices.assignedModuleToInstructor(user.id);
+    (0, sendResponse_1.default)(res, {
+        statusCode: 200,
+        message: "Module fetched by instructor successfully",
+        result: result,
+    });
+}));
 exports.moduleController = {
     createIntoDB,
     getAllFromDB,
     getById,
+    getByCourseId,
     updateDoc,
     deleteDoc,
+    assignedModuleToInstructor,
 };
