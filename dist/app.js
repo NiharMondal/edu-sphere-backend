@@ -15,10 +15,7 @@ app.use("/api/v1/stripe", payment_routes_1.stripeWebhooksRoutes);
 app.use((0, cookie_parser_1.default)());
 app.use(express_1.default.json());
 app.use((0, cors_1.default)({
-    origin: [
-        // "https://learn-management-system-mu.vercel.app",
-        "http://localhost:3000",
-    ],
+    origin: ["https://edu-sphere-five.vercel.app", "http://localhost:3000"],
     credentials: true,
 }));
 app.use("/api/v1", routes_1.default);

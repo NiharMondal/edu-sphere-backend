@@ -17,10 +17,7 @@ app.use(express.json());
 
 app.use(
 	cors({
-		origin: [
-			// "https://learn-management-system-mu.vercel.app",
-			"http://localhost:3000",
-		],
+		origin: ["https://edu-sphere-five.vercel.app", "http://localhost:3000"],
 		credentials: true,
 	})
 );
