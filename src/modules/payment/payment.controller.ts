@@ -5,7 +5,6 @@ import sendResponse from "../../utils/sendResponse";
 
 const createIntoDB = asyncHandler(async (req: Request, res: Response) => {
 	const sig = req.headers["stripe-signature"];
-
 	const data = await paymentServices.createIntoDB(req.body, sig);
 
 	sendResponse(res, {
@@ -14,6 +13,7 @@ const createIntoDB = asyncHandler(async (req: Request, res: Response) => {
 		result: data,
 	});
 });
+
 const getAllFromDB = asyncHandler(async (req: Request, res: Response) => {
 	const query = req.query;
 	const data = await paymentServices.getAllFromDB(query as {});

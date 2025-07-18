@@ -24,16 +24,16 @@ const loginUser = asyncHandler(async (req: Request, res: Response) => {
 
 	res.cookie("accessToken", accessToken, {
 		httpOnly: false, // set to true if you don't need to read it from JS
-		maxAge: 30 * 60 * 1000, // 15 minutes
+		maxAge: 30 * 60 * 1000, // 30 minutes
 		secure: envConfig.node_env === "production",
-		sameSite: "lax",
+		sameSite: "none",
 		path: "/",
 	});
 
 	res.cookie("refreshToken", refreshToken, {
 		httpOnly: true,
 		secure: true,
-		maxAge: 30 * 24 * 60 * 60 * 1000, // 7 days
+		maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
 		sameSite: "none",
 		path: "/",
 	});
@@ -70,7 +70,7 @@ const getRefreshToken = asyncHandler(async (req: Request, res: Response) => {
 const loggedOut = asyncHandler(async (req: Request, res: Response) => {
 	res.clearCookie("accessToken", {
 		path: "/",
-		sameSite: "lax",
+		sameSite: "none",
 		secure: envConfig.node_env === "production",
 		httpOnly: false,
 	});

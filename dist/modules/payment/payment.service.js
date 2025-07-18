@@ -43,11 +43,11 @@ const createIntoDB = (body, sig) => __awaiter(void 0, void 0, void 0, function* 
         yield payment_model_1.PaymentHistory.create({
             student: (_b = session === null || session === void 0 ? void 0 : session.metadata) === null || _b === void 0 ? void 0 : _b.student,
             course: (_c = session === null || session === void 0 ? void 0 : session.metadata) === null || _c === void 0 ? void 0 : _c.course,
+            checkoutSessionId: session === null || session === void 0 ? void 0 : session.id,
             amount: (session === null || session === void 0 ? void 0 : session.amount_total) / 100,
             currency: session.currency,
             paymentStatus: session === null || session === void 0 ? void 0 : session.payment_status,
             paymentIntentId: session === null || session === void 0 ? void 0 : session.payment_intent,
-            checkoutSessionId: session === null || session === void 0 ? void 0 : session.id,
             customerDetails: {
                 email: (_d = session === null || session === void 0 ? void 0 : session.customer_details) === null || _d === void 0 ? void 0 : _d.email,
                 name: (_e = session === null || session === void 0 ? void 0 : session.customer_details) === null || _e === void 0 ? void 0 : _e.name,
