@@ -24,14 +24,30 @@ const userSchema = new mongoose_1.Schema({
     email: {
         type: String,
         required: [true, "Email is required"],
+        unique: true, // This ensures a MongoDB-level constraint
+        lowercase: true,
+        trim: true,
     },
-    role: {
+    phone: {
         type: String,
-        default: "user",
+        trim: true,
+    },
+    avatar: {
+        type: String,
+        trim: true,
     },
     password: {
         type: String,
         required: [true, "Password is required"],
+    },
+    role: {
+        type: String,
+        enum: ["student", "instructor", "admin"],
+        default: "student",
+    },
+    isDeleted: {
+        type: Boolean,
+        default: false,
     },
 }, { timestamps: true });
 userSchema.pre("save", function (next) {

@@ -15,17 +15,27 @@ const moduleSchema = new mongoose_1.Schema({
     title: {
         type: String,
         required: [true, "Module name is required"],
+        unique: [true, "Module title should be unique"],
     },
     index: {
         type: Number,
-        default: 1,
+        default: 1, // auto-incremented
+    },
+    isDeleted: {
+        type: Boolean,
+        default: false,
     },
     course: {
         type: mongoose_1.Schema.Types.ObjectId,
         required: [true, "Course ID is required"],
         ref: "Course",
     },
-    lectures: [{ type: mongoose_1.Schema.Types.ObjectId, ref: "Lecture" }],
+    lectures: [
+        {
+            type: mongoose_1.Schema.Types.ObjectId,
+            ref: "Lecture",
+        },
+    ],
 }, { timestamps: true });
 moduleSchema.pre("save", function (next) {
     return __awaiter(this, void 0, void 0, function* () {

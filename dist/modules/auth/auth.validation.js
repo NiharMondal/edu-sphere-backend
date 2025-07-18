@@ -10,9 +10,10 @@ const registerUser = zod_1.z.object({
         .trim(),
     email: zod_1.z
         .string({ required_error: "Email is required" })
-        .email({ message: "Email should be valid email" })
+        .email({ message: "Email should be a valid email" })
+        .toLowerCase()
         .trim(),
-    role: zod_1.z.enum(["user", "admin"]).optional(),
+    role: zod_1.z.enum(["student", "admin", "instructor"]).optional(),
     password: zod_1.z
         .string({ required_error: "Password is required" })
         .min(6, "Password should be at least 6 characters")

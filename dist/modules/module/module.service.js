@@ -13,10 +13,15 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.moduleServices = void 0;
+const mongoose_1 = __importDefault(require("mongoose"));
 const CustomError_1 = __importDefault(require("../../utils/CustomError"));
 const course_model_1 = require("../course/course.model");
 const lecture_model_1 = require("../lecture/lecture.model");
 const module_model_1 = require("./module.model");
+const utils_1 = require("../../utils");
+const enrollment_model_1 = require("../enrollment/enrollment.model");
+const notification_model_1 = require("../notification/notification.model");
+const socket_1 = require("../../socket");
 const createIntoDB = (courseId, payload) => __awaiter(void 0, void 0, void 0, function* () {
     // double checking by courseId and params
     const course = yield course_model_1.Course.findOne({
@@ -25,23 +30,52 @@ const createIntoDB = (courseId, payload) => __awaiter(void 0, void 0, void 0, fu
     if (!course) {
         throw new CustomError_1.default(404, "Requested course is not found!");
     }
-    // checking module exist or not
-    const existedModule = yield module_model_1.Module.findOne({ title: payload.title });
-    if (existedModule) {
-        throw new CustomError_1.default(302, "Module title is already exist!");
-    }
-    //actual data
-    const data = yield module_model_1.Module.create(payload);
-    //updating course collection
-    yield course_model_1.Course.findOneAndUpdate({ _id: courseId }, {
-        $push: {
-            modules: data._id,
-        },
+    const module = yield module_model_1.Module.findOne({
+        title: payload.title,
+        course: payload.course,
     });
-    return data;
+    if (module) {
+        throw new CustomError_1.default(400, "Title should be unique");
+    }
+    const lastModule = yield module_model_1.Module.findOne({ course: payload.course }).sort({
+        index: -1,
+    });
+    const newIndex = lastModule ? lastModule.index + 1 : 1;
+    const session = yield mongoose_1.default.startSession();
+    session.startTransaction();
+    try {
+        const module = new module_model_1.Module(Object.assign(Object.assign({}, payload), { index: newIndex }));
+        yield module.save({ session }); //first step
+        const enrollments = yield enrollment_model_1.Enrollment.find({
+            course: payload.course,
+        }).session(session); // second step: this step is for creating notification
+        for (const enrollment of enrollments) {
+            const notification = new notification_model_1.Notification({
+                student: enrollment.student,
+                message: `Module ${module.index}: ${module.title} has been released`,
+                type: "module-update",
+            });
+            yield notification.save({ session }); // third step: saving notifications
+            const io = (0, socket_1.getIO)();
+            io.to(enrollment.student.toString()).emit("new-notification", notification);
+        }
+        yield course_model_1.Course.findByIdAndUpdate({ _id: module.course }, {
+            $push: {
+                modules: module._id,
+            },
+        }, { new: true, runValidators: true }).session(session); // forth step: saving modules to course model
+        yield session.commitTransaction();
+        yield session.endSession();
+        return module;
+    }
+    catch (error) {
+        yield session.abortTransaction();
+        yield session.endSession();
+        console.log(error);
+        throw new CustomError_1.default(400, "Could not create module");
+    }
 });
 const getAllFromDB = (query) => __awaiter(void 0, void 0, void 0, function* () {
-    const { search } = query;
     const modules = yield module_model_1.Module.find()
         .populate({
         path: "course",
@@ -50,7 +84,7 @@ const getAllFromDB = (query) => __awaiter(void 0, void 0, void 0, function* () {
         .populate({
         path: "lectures",
     })
-        .sort({ createdat: "desc" });
+        .sort({ createdAt: "desc" });
     return modules;
 });
 const getById = (id) => __awaiter(void 0, void 0, void 0, function* () {
@@ -60,13 +94,22 @@ const getById = (id) => __awaiter(void 0, void 0, void 0, function* () {
     }
     return data;
 });
+// by course Id
+const getByCourseId = (id) => __awaiter(void 0, void 0, void 0, function* () {
+    const data = yield module_model_1.Module.find({ course: id });
+    if (!data) {
+        throw new CustomError_1.default(404, "Course not found!");
+    }
+    return data;
+});
 const updateDoc = (id, payload) => __awaiter(void 0, void 0, void 0, function* () {
     const module = yield module_model_1.Module.findById(id);
     if (!module) {
         throw new CustomError_1.default(404, "Module not found!");
     }
+    const slug = (0, utils_1.generateSlug)(payload === null || payload === void 0 ? void 0 : payload.title);
     const data = yield module_model_1.Module.findByIdAndUpdate({ _id: id }, {
-        $set: Object.assign({}, payload),
+        $set: Object.assign(Object.assign({}, payload), { slug }),
     }, { new: true, runValidators: true });
     return data;
 });
@@ -75,18 +118,48 @@ const deleteDoc = (id) => __awaiter(void 0, void 0, void 0, function* () {
     if (!res) {
         throw new CustomError_1.default(404, "Module not found!");
     }
-    //delete lectures based on module id
-    yield lecture_model_1.Lecture.deleteMany({ module: id }); // id refers to module id
-    //updating course module array
-    yield course_model_1.Course.findByIdAndUpdate(res.course, { $pull: { modules: id } });
-    //deleting module
-    const data = yield module_model_1.Module.findByIdAndDelete(id);
-    return data;
+    const session = yield mongoose_1.default.startSession();
+    session.startTransaction();
+    try {
+        //delete lectures based on module id
+        yield lecture_model_1.Lecture.deleteMany({ module: id }).session(session); // id refers to module id
+        //updating course module array
+        yield course_model_1.Course.findByIdAndUpdate(res.course, {
+            $pull: { modules: id },
+        }).session(session);
+        //deleting module
+        const data = yield module_model_1.Module.findByIdAndDelete(id).session(session);
+        //commit session
+        yield session.commitTransaction();
+        session.endSession();
+        return data;
+    }
+    catch (error) {
+        yield session.abortTransaction();
+        session.endSession();
+        throw new CustomError_1.default(500, "Could not delete module");
+    }
+});
+const assignedModuleToInstructor = (insId) => __awaiter(void 0, void 0, void 0, function* () {
+    const courses = yield course_model_1.Course.find({ instructor: insId });
+    const courseIds = courses.map((c) => c._id);
+    const modules = yield module_model_1.Module.find({ course: { $in: courseIds } })
+        .populate({
+        path: "course",
+        select: "title",
+    })
+        .populate({
+        path: "lectures",
+    })
+        .sort({ createdAt: "desc" });
+    return modules;
 });
 exports.moduleServices = {
     createIntoDB,
     getAllFromDB,
     getById,
+    getByCourseId,
     updateDoc,
     deleteDoc,
+    assignedModuleToInstructor,
 };

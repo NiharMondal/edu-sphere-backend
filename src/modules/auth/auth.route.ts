@@ -24,4 +24,7 @@ router.post(
 	authController.changePassword
 );
 
+router.post("/refresh-token", authController.getRefreshToken);
+
+router.post("/logged-out", authController.loggedOut);
 export const authRoute = router;

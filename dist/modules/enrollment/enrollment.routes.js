@@ -1,0 +1,12 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.enrollmentRoute = void 0;
+const express_1 = require("express");
+const enrollment_controller_1 = require("./enrollment.controller");
+const authGuard_1 = require("../../middleware/authGuard");
+const constant_1 = require("../../constant");
+const router = (0, express_1.Router)();
+router.get("/my-enrollment", (0, authGuard_1.authGuard)(constant_1.ROLE.student), enrollment_controller_1.enrollmentController.myEnrollment);
+router.post("/create-checkout-session", enrollment_controller_1.enrollmentController.createIntoDB);
+router.get("/", enrollment_controller_1.enrollmentController.getAllFromDB);
+exports.enrollmentRoute = router;

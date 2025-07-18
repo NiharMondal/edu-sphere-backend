@@ -5,6 +5,9 @@ import { Lecture } from "../lecture/lecture.model";
 import { IModule } from "./module.interface";
 import { Module } from "./module.model";
 import { generateSlug } from "../../utils";
+import { Enrollment } from "../enrollment/enrollment.model";
+import { Notification } from "../notification/notification.model";
+import { getIO } from "../../socket";
 
 const createIntoDB = async (courseId: string, payload: IModule) => {
 	// double checking by courseId and params
@@ -16,62 +19,72 @@ const createIntoDB = async (courseId: string, payload: IModule) => {
 		throw new CustomError(404, "Requested course is not found!");
 	}
 
-	// checking module exist or not
-	const existedModule = await Module.findOne({
+	const module = await Module.findOne({
 		title: payload.title,
-		course: courseId,
+		course: payload.course,
 	});
 
-	if (existedModule) {
-		throw new CustomError(302, "Module title is already exist!");
+	if (module) {
+		throw new CustomError(400, "Title should be unique");
 	}
+	const lastModule = await Module.findOne({ course: payload.course }).sort({
+		index: -1,
+	});
+	const newIndex = lastModule ? lastModule.index + 1 : 1;
 
 	const session = await mongoose.startSession();
 	session.startTransaction();
 
 	try {
-		//first transaction -> creating module
-		const slug = generateSlug(payload.title); //generating slug
-		const newModule = new Module({ ...payload, slug });
-		await newModule.save({ session });
+		const module = new Module({
+			...payload,
+			index: newIndex,
+		});
+		await module.save({ session }); //first step
 
-		//second transaction -> updating course collection
-		const updateResult = await Course.findOneAndUpdate(
-			{ _id: courseId },
-			{
-				$push: {
-					modules: newModule._id,
-				},
-			},
-			{ session, new: true }
-		);
+		const enrollments = await Enrollment.find({
+			course: payload.course,
+		}).session(session); // second step: this step is for creating notification
 
-		// If course update failed, abort transaction
-		if (!updateResult) {
-			await session.abortTransaction();
-			session.endSession();
-			throw new CustomError(
-				400,
-				"Failed to update course with new module"
+		for (const enrollment of enrollments) {
+			const notification = new Notification({
+				student: enrollment.student,
+				message: `Module ${module.index}: ${module.title} has been released`,
+				type: "module-update",
+			});
+
+			await notification.save({ session }); // third step: saving notifications
+
+			const io = getIO();
+
+			io.to(enrollment.student.toString()).emit(
+				"new-notification",
+				notification
 			);
 		}
+		await Course.findByIdAndUpdate(
+			{ _id: module.course },
+			{
+				$push: {
+					modules: module._id,
+				},
+			},
+			{ new: true, runValidators: true }
+		).session(session); // forth step: saving modules to course model
 
-		//commit session
 		await session.commitTransaction();
-		session.endSession();
+		await session.endSession();
 
-		return newModule;
+		return module;
 	} catch (error) {
 		await session.abortTransaction();
-		session.endSession();
-
-		throw new CustomError(500, "Could not create module");
+		await session.endSession();
+		console.log(error);
+		throw new CustomError(400, "Could not create module");
 	}
 };
 
 const getAllFromDB = async (query: Record<string, string>) => {
-	const { search } = query;
-
 	const modules = await Module.find()
 		.populate({
 			path: "course",
@@ -153,6 +166,21 @@ const deleteDoc = async (id: string) => {
 	}
 };
 
+const assignedModuleToInstructor = async (insId: string) => {
+	const courses = await Course.find({ instructor: insId });
+	const courseIds = courses.map((c) => c._id);
+	const modules = await Module.find({ course: { $in: courseIds } })
+		.populate({
+			path: "course",
+			select: "title",
+		})
+		.populate({
+			path: "lectures",
+		})
+		.sort({ createdAt: "desc" });
+
+	return modules;
+};
 export const moduleServices = {
 	createIntoDB,
 	getAllFromDB,
@@ -161,4 +189,6 @@ export const moduleServices = {
 
 	updateDoc,
 	deleteDoc,
+
+	assignedModuleToInstructor,
 };

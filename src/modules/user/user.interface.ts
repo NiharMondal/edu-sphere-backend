@@ -1,12 +1,11 @@
-import { Types } from "mongoose";
+type TRole = "student" | "instructor" | "admin";
 
 export interface IUser {
 	name: string;
 	email: string;
 	avatar: string;
 	password: string;
-	role: string;
-	enrolledCourses: Types.ObjectId;
-	createdCourses: Types.ObjectId;
+	phone: string;
+	role: TRole;
 	isDeleted: boolean;
 }

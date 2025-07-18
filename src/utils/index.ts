@@ -1,15 +1,14 @@
 import jwt, { JwtPayload } from "jsonwebtoken";
-import { envConfig } from "../config/index";
 import slugify from "slugify";
 import CustomError from "./CustomError";
 
-export const generateToken = (payload: JwtPayload) => {
-	// const token = jwt.sign(payload, envConfig.jwt_secret!, {
-	// 	expiresIn,
-	// });
-
-	const token = jwt.sign(payload, envConfig.jwt_secret!, {
-		expiresIn: "2d",
+export const generateToken = (
+	payload: JwtPayload,
+	secret: string,
+	expiresIn: any
+) => {
+	const token = jwt.sign(payload, secret, {
+		expiresIn: expiresIn,
 	});
 	return token;
 };

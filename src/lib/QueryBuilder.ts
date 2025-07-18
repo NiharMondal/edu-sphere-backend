@@ -1,4 +1,4 @@
-import mongoose, { FilterQuery, Query } from "mongoose";
+import { FilterQuery, Query } from "mongoose";
 
 class QueryBuilder<T> {
 	public queryModel: Query<T[], T>;
@@ -14,7 +14,6 @@ class QueryBuilder<T> {
 
 	filter() {
 		const queryCopy = { ...this.query };
-		queryCopy["isDeleted"] = false;
 
 		const excludedFields = [
 			"search",
@@ -54,7 +53,7 @@ class QueryBuilder<T> {
 
 	budget() {
 		const minPrice = Number(this?.query?.minBudget) || 0;
-		const maxPrice = Number(this?.query?.maxBudget) || 12000;
+		const maxPrice = Number(this?.query?.maxBudget) || 50000;
 		if (minPrice || maxPrice) {
 			this.queryModel = this.queryModel.find({
 				budget: { $gte: minPrice, $lte: maxPrice },
@@ -65,8 +64,7 @@ class QueryBuilder<T> {
 
 	sort() {
 		const sortBy = this.query?.sortBy || "createdAt";
-		const order = this.query?.order || "desc";
-		const sortOrder = order === "asc" ? 1 : -1; // Determine sort order (default to descending)
+		const order = this.query?.order || "asc";
 
 		// Validate the sortBy field to ensure it's a valid key
 		const validSortFields = [
@@ -76,10 +74,11 @@ class QueryBuilder<T> {
 			"visitors",
 			"createdAt",
 		]; // Add valid fields here
+
 		if (sortBy || order) {
 			if (validSortFields.includes(sortBy as string)) {
 				// Create a dynamic sort object
-				const sortObj = { [sortBy as string]: sortOrder };
+				const sortObj = { [sortBy as string]: order };
 
 				this.queryModel = this.queryModel.sort(sortObj as {});
 			}

@@ -28,7 +28,7 @@ const globalErrorHandler = (
 		});
 	}
 
-	//mongose duplicate key error
+	//mongoose duplicate key error
 	if (err?.code === 11000) {
 		errorResponse.statusCode = 302;
 		errorResponse.message = "Duplicate key error";

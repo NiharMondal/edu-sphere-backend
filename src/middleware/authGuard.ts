@@ -10,29 +10,49 @@ export const authGuard = (...roles: string[]) => {
 
 		try {
 			if (!token) {
-				throw new CustomError(401, "Not authorized");
+				throw new CustomError(401, "Access token missing");
 			}
 
 			const decodeToken = jwt.verify(
 				token,
-				envConfig.jwt_secret as string
+				envConfig.access_token_secret as string
 			) as JwtPayload;
 
-			const { id, role } = decodeToken;
+			const { id, role, exp } = decodeToken;
+
+			// Correct expiration check (exp is in seconds)
+			if (exp && exp < Math.floor(Date.now() / 1000)) {
+				throw new CustomError(401, "Access token expired");
+			}
+
 			const user = await User.findById(id);
-			if (!user) {
-				throw new CustomError(401, "Not authorized");
+
+			if (!user || user.isDeleted) {
+				throw new CustomError(401, "User not found or deleted");
 			}
 
-			if (token && !roles.includes(role)) {
-				throw new CustomError(401, "Not authorized");
+			// Check for required role (authorization)
+			if (roles.length && !roles.includes(role)) {
+				throw new CustomError(
+					403,
+					"Forbidden: insufficient permissions"
+				);
 			}
 
+			// Attach user info to request object
 			req.user = decodeToken;
 
 			next();
 		} catch (error) {
-			next(error);
+			// Optional: Handle token expiration separately if you want
+			if (
+				error instanceof Error &&
+				(error as any).name === "TokenExpiredError"
+			) {
+				next(new CustomError(401, "Access token expired"));
+			} else {
+				next(error);
+			}
 		}
 	};
 };

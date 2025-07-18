@@ -1,10 +1,9 @@
-import mongoose from "mongoose";
-import { generateSlug } from "../../utils";
+import mongoose, { ObjectId, Schema } from "mongoose";
 import CustomError from "../../utils/CustomError";
-import { Course } from "../course/course.model";
 import { Module } from "../module/module.model";
 import { ILecture } from "./lecture.interface";
 import { Lecture } from "./lecture.model";
+import { Course } from "../course/course.model";
 
 const createIntoDB = async (moduleId: string, payload: ILecture) => {
 	// double checking by moduleId and params
@@ -27,8 +26,7 @@ const createIntoDB = async (moduleId: string, payload: ILecture) => {
 	session.startTransaction();
 
 	try {
-		const slug = generateSlug(payload.title);
-		const newLecture = new Lecture({ ...payload, slug });
+		const newLecture = new Lecture(payload);
 		await newLecture.save({ session }); // first transaction -> create lecture
 
 		//second tran -> update module collection
@@ -65,8 +63,14 @@ const createIntoDB = async (moduleId: string, payload: ILecture) => {
 };
 
 const getAllFromDB = async (query: Record<string, string>) => {
-	const { search } = query;
-	const data = await Lecture.find().populate("module", "title");
+	const data = await Lecture.find().populate({
+		path: "module",
+		select: "title course",
+		populate: {
+			path: "course",
+			select: "title",
+		},
+	});
 
 	return data;
 };
@@ -110,6 +114,25 @@ const deleteDoc = async (id: string) => {
 	return data;
 };
 
+const assignedLectureToInstructor = async (insId: string) => {
+	const courses = await Course.find({ instructor: insId });
+	const courseIds = courses.map((c) => c._id);
+	const modules = await Module.find({ course: { $in: courseIds } });
+
+	const modulesId = modules.map((m) => m?._id);
+
+	const lectures = await Lecture.find({
+		module: { $in: modulesId },
+	}).populate({
+		path: "module",
+		select: "title course",
+		populate: {
+			path: "course",
+			select: "title",
+		},
+	});
+	return lectures;
+};
 export const lectureServices = {
 	createIntoDB,
 	getAllFromDB,
@@ -117,4 +140,6 @@ export const lectureServices = {
 
 	updateDoc,
 	deleteDoc,
+
+	assignedLectureToInstructor,
 };

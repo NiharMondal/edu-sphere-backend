@@ -20,7 +20,7 @@ const globalErrorHandler = (err, req, res, next) => {
             };
         });
     }
-    //mongose duplicate key error
+    //mongoose duplicate key error
     if ((err === null || err === void 0 ? void 0 : err.code) === 11000) {
         errorResponse.statusCode = 302;
         errorResponse.message = "Duplicate key error";

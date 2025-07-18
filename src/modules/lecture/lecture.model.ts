@@ -6,14 +6,11 @@ const lectureSchema = new Schema<ILecture>(
 		title: {
 			type: String,
 			required: [true, "Lecture title is required"],
-		},
-		slug: {
-			type: String,
 			unique: true,
 		},
 		type: {
 			type: String,
-			enum: ["video", "text", "pdf"],
+			enum: ["video", "post"],
 			required: [true, "File type is required"],
 		},
 		content: {
@@ -22,9 +19,7 @@ const lectureSchema = new Schema<ILecture>(
 		},
 		duration: {
 			type: Number,
-			required: function () {
-				return this.type === "video";
-			},
+			required: [true, "Lecture duration is required"],
 		},
 
 		module: {
@@ -32,6 +27,7 @@ const lectureSchema = new Schema<ILecture>(
 			required: [true, "Module ID is required"],
 			ref: "Module",
 		},
+
 		isDeleted: {
 			type: Boolean,
 			default: false,

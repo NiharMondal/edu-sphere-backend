@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 import asyncHandler from "../../utils/asyncHandler";
 import sendResponse from "../../utils/sendResponse";
 import { courseServices } from "./course.service";
+import { TQuery } from "../../type";
 
 const createIntoDB = asyncHandler(async (req: Request, res: Response) => {
 	const result = await courseServices.createIntoDB(req.body);
@@ -14,7 +15,7 @@ const createIntoDB = asyncHandler(async (req: Request, res: Response) => {
 });
 
 const getAllFromDB = asyncHandler(async (req: Request, res: Response) => {
-	const result = await courseServices.getAllFromDB(req.query as {});
+	const result = await courseServices.getAllFromDB(req.query as TQuery);
 
 	sendResponse(res, {
 		statusCode: 200,
@@ -64,6 +65,28 @@ const deleteDoc = asyncHandler(async (req: Request, res: Response) => {
 	});
 });
 
+const popularCourses = asyncHandler(async (req: Request, res: Response) => {
+	const result = await courseServices.popularCourses();
+
+	sendResponse(res, {
+		statusCode: 200,
+		message: "Popular courses fetched successfully",
+		result: result,
+	});
+});
+const getCoursesByInstructorId = asyncHandler(
+	async (req: Request, res: Response) => {
+		const { id } = req.user;
+		const result = await courseServices.getCoursesByInstructorId(id);
+
+		sendResponse(res, {
+			statusCode: 200,
+			message: "My courses fetched successfully",
+			result: result,
+		});
+	}
+);
+
 export const courseController = {
 	createIntoDB,
 	getAllFromDB,
@@ -71,4 +94,7 @@ export const courseController = {
 	getBySlug,
 	updateDoc,
 	deleteDoc,
+
+	popularCourses,
+	getCoursesByInstructorId,
 };

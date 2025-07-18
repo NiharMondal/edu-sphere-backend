@@ -8,9 +8,7 @@ const moduleSchema = new Schema<IModule>(
 			required: [true, "Module name is required"],
 			unique: [true, "Module title should be unique"],
 		},
-		slug: {
-			type: String,
-		},
+
 		index: {
 			type: Number,
 			default: 1, // auto-incremented

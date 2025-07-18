@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-const createrUser = z.object({
+const createUser = z.object({
 	name: z
 		.string({ required_error: "Name is required" })
 		.min(3, "Min length should be 3 characters")
@@ -19,4 +19,4 @@ const createrUser = z.object({
 		.trim(),
 });
 
-export const userValidation = { createrUser };
+export const userValidation = { createUser };

@@ -13,24 +13,23 @@ const enrollmentSchema = new Schema<IEnrollment>(
 			ref: "Course",
 			required: [true, "Course ID is required"],
 		},
-		progress: {
-			type: Number,
-			default: 0,
+		pricingType: {
+			type: String,
+			enum: ["free", "paid"],
 		},
-		lastWatchedLecture: {
-			type: Schema.Types.ObjectId,
-			ref: "Lecture",
-			default: null,
+		status: {
+			type: String,
+			enum: ["pending", "paid"],
+			default: "pending",
 		},
-		unLockedLectureIds: [
-			{
-				type: Schema.Types.ObjectId,
-				ref: "Lecture",
-			},
-		],
+
 		enrolledAt: {
 			type: Date,
 			default: Date.now,
+		},
+		progress: {
+			type: Schema.Types.ObjectId,
+			ref: "Progress",
 		},
 	},
 	{ timestamps: true }
