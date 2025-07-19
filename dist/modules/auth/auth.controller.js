@@ -30,13 +30,6 @@ const registerUser = (0, asyncHandler_1.default)((req, res) => __awaiter(void 0,
 const loginUser = (0, asyncHandler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const result = yield auth_service_1.authServices.loginUser(req.body);
     const { accessToken, refreshToken } = result;
-    res.cookie("accessToken", accessToken, {
-        httpOnly: false, // set to true if you don't need to read it from JS
-        maxAge: 30 * 60 * 1000, // 30 minutes
-        secure: config_1.envConfig.node_env === "production",
-        sameSite: "none",
-        path: "/",
-    });
     res.cookie("refreshToken", refreshToken, {
         httpOnly: true,
         secure: true,

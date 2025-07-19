@@ -19,16 +19,7 @@ const registerUser = asyncHandler(async (req: Request, res: Response) => {
 //login user
 const loginUser = asyncHandler(async (req: Request, res: Response) => {
 	const result = await authServices.loginUser(req.body);
-
 	const { accessToken, refreshToken } = result;
-
-	res.cookie("accessToken", accessToken, {
-		httpOnly: false, // set to true if you don't need to read it from JS
-		maxAge: 30 * 60 * 1000, // 30 minutes
-		secure: envConfig.node_env === "production",
-		sameSite: "none",
-		path: "/",
-	});
 
 	res.cookie("refreshToken", refreshToken, {
 		httpOnly: true,
