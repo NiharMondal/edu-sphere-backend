@@ -1,11 +1,17 @@
-import { FilterQuery, Query } from "mongoose";
+import {
+	QueryWithHelpers,
+	PopulateOptions,
+	Document,
+	FilterQuery,
+} from "mongoose";
+import { PAGE_LIMIT } from "../constant";
 
 class QueryBuilder<T> {
-	public queryModel: Query<T[], T>;
+	public queryModel: QueryWithHelpers<T[], T, {}, T>;
 	public query: Record<string, string | string[] | unknown>;
 
 	constructor(
-		queryModel: Query<T[], T>,
+		queryModel: QueryWithHelpers<T[], T, {}, T>,
 		query: Record<string, string | string[] | unknown>
 	) {
 		this.queryModel = queryModel;
@@ -25,99 +31,120 @@ class QueryBuilder<T> {
 			"minBudget",
 			"fields",
 		];
-
-		// deleting item from main query
 		excludedFields.forEach((field) => delete queryCopy[field]);
 
-		if (this?.query) {
-			this.queryModel = this.queryModel.find(queryCopy);
-		}
+		const mongoQuery: Record<string, any> = {};
+
+		Object.entries(queryCopy).forEach(([key, value]) => {
+			if (typeof value === "string" && value.includes(",")) {
+				// For multi-value filters like category=design,development
+				mongoQuery[key] = { $in: value.split(",") };
+			} else {
+				mongoQuery[key] = value;
+			}
+		});
+
+		this.queryModel = this.queryModel.find(mongoQuery);
+
 		return this;
 	}
-	search(searchableFields: string[] | []) {
-		if (this?.query?.search) {
-			this.queryModel = this.queryModel.find({
-				$or: searchableFields.map(
-					(field) =>
-						({
-							[field]: {
-								$regex: this?.query?.search,
-								$options: "i",
-							},
-						} as FilterQuery<T>)
-				),
-			});
+
+	search(searchableFields: string[]) {
+		const searchTerm = (this.query?.search as string)?.trim();
+
+		if (searchTerm && searchableFields.length > 0) {
+			const regex = new RegExp(searchTerm, "i");
+
+			const orConditions: FilterQuery<T>[] = searchableFields.map(
+				(field) => {
+					return {
+						[field]: { $regex: regex },
+					} as FilterQuery<T>;
+				}
+			);
+
+			this.queryModel = this.queryModel.find({ $or: orConditions });
 		}
+
 		return this;
 	}
 
 	budget() {
-		const minPrice = Number(this?.query?.minBudget) || 0;
-		const maxPrice = Number(this?.query?.maxBudget) || 50000;
-		if (minPrice || maxPrice) {
+		const min = this.query?.minBudget;
+		const max = this.query?.maxBudget;
+
+		if (min || max) {
 			this.queryModel = this.queryModel.find({
-				budget: { $gte: minPrice, $lte: maxPrice },
+				budget: {
+					...(min ? { $gte: Number(min) } : {}),
+					...(max ? { $lte: Number(max) } : {}),
+				},
 			});
 		}
+
 		return this;
 	}
 
 	sort() {
-		const sortBy = this.query?.sortBy || "createdAt";
-		const order = this.query?.order || "asc";
+		const sortBy = this.query?.sortBy as string;
+		const order = this.query?.order === "desc" ? -1 : 1;
 
-		// Validate the sortBy field to ensure it's a valid key
-		const validSortFields = [
-			"title",
-			"rating",
-			"budget",
-			"visitors",
-			"createdAt",
-		]; // Add valid fields here
-
-		if (sortBy || order) {
-			if (validSortFields.includes(sortBy as string)) {
-				// Create a dynamic sort object
-				const sortObj = { [sortBy as string]: order };
-
-				this.queryModel = this.queryModel.sort(sortObj as {});
-			}
+		if (sortBy) {
+			this.queryModel = this.queryModel.sort({ [sortBy]: order });
+		} else {
+			this.queryModel = this.queryModel.sort({ createdAt: order });
 		}
 
 		return this;
 	}
 
 	pagination() {
-		const p = Number(this?.query?.page) || 1;
-		const l = Number(this?.query?.limit) || 10;
+		const page = Number(this.query?.page) || 1;
+		const limit = Number(this.query?.limit) || PAGE_LIMIT;
+		const skip = (page - 1) * limit;
 
-		const skip = (p - 1) * l;
-
-		this.queryModel = this.queryModel.skip(skip).limit(l);
+		this.queryModel = this.queryModel.skip(skip).limit(limit);
 
 		return this;
 	}
 
 	fields() {
-		if (this?.query?.fields) {
-			const field =
-				(this?.query?.fields as string).split(",").join(" ") || "- __v";
-			this.queryModel = this.queryModel.select(field);
+		if (this.query?.fields) {
+			const fieldString = (this.query.fields as string)
+				.split(",")
+				.join(" ");
+			this.queryModel = this.queryModel.select(fieldString);
 		}
 		return this;
 	}
+
+	populate(fields: string | PopulateOptions | (string | PopulateOptions)[]) {
+		if (fields) {
+			const normalized: (string | PopulateOptions)[] =
+				typeof fields === "string" || !Array.isArray(fields)
+					? [fields]
+					: fields;
+
+			this.queryModel = this.queryModel.populate(normalized);
+		}
+		return this;
+	}
+
+	getQuery() {
+		return this.queryModel;
+	}
+
 	async countTotal() {
-		const queries = this.queryModel.getFilter();
-
-		const totalDocs = await this.queryModel.model.countDocuments(queries);
-		const limit = Number(this.query?.limit) || 10;
-
+		const filters = this.queryModel.getFilter();
+		const totalDocs = await this.queryModel.model.countDocuments(filters);
+		const limit = Number(this.query?.limit) || PAGE_LIMIT;
+		const currentPage = Number(this.query?.page) || 1;
 		const totalPages = Math.ceil(totalDocs / limit);
-		const currentPage = Number(this?.query?.page) || 1;
+
 		return {
-			totalDocs,
-			totalPages,
 			currentPage,
+			totalPages,
+			totalDocs,
 		};
 	}
 }

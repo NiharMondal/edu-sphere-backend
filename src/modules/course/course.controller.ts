@@ -20,7 +20,8 @@ const getAllFromDB = asyncHandler(async (req: Request, res: Response) => {
 	sendResponse(res, {
 		statusCode: 200,
 		message: "Course fetched successfully",
-		result: result,
+		result: result.courses,
+		meta: result.meta,
 	});
 });
 

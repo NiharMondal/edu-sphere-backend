@@ -4,6 +4,8 @@ import { Module } from "../module/module.model";
 import { ILecture } from "./lecture.interface";
 import { Lecture } from "./lecture.model";
 import { Course } from "../course/course.model";
+import QueryBuilder from "../../lib/QueryBuilder";
+import { TQuery } from "../../type";
 
 const createIntoDB = async (moduleId: string, payload: ILecture) => {
 	// double checking by moduleId and params
@@ -63,16 +65,26 @@ const createIntoDB = async (moduleId: string, payload: ILecture) => {
 };
 
 const getAllFromDB = async (query: Record<string, string>) => {
-	const data = await Lecture.find().populate({
-		path: "module",
-		select: "title course",
-		populate: {
-			path: "course",
-			select: "title",
-		},
-	});
+	const queryBuilder = new QueryBuilder(Lecture.find(), query)
+		.search(["title"])
+		.sort()
+		.pagination()
+		.fields()
+		.populate({
+			path: "module",
+			select: "title course",
+			populate: {
+				path: "course",
+				select: "title",
+			},
+		});
 
-	return data;
+	const lectures = await queryBuilder.getQuery();
+	const meta = await queryBuilder.countTotal();
+	return {
+		meta,
+		lectures,
+	};
 };
 
 const getById = async (id: string) => {
@@ -114,25 +126,33 @@ const deleteDoc = async (id: string) => {
 	return data;
 };
 
-const assignedLectureToInstructor = async (insId: string) => {
+const assignedLectureToInstructor = async (insId: string, query: TQuery) => {
 	const courses = await Course.find({ instructor: insId });
 	const courseIds = courses.map((c) => c._id);
 	const modules = await Module.find({ course: { $in: courseIds } });
 
 	const modulesId = modules.map((m) => m?._id);
 
-	const lectures = await Lecture.find({
-		module: { $in: modulesId },
-	}).populate({
-		path: "module",
-		select: "title course",
-		populate: {
-			path: "course",
-			select: "title",
-		},
-	});
-	return lectures;
+	const queryBuilder = new QueryBuilder(
+		Lecture.find({ module: { $in: modulesId } }),
+		query
+	)
+		.search(["title"])
+		.sort()
+		.pagination()
+		.populate({
+			path: "module",
+			select: "title course",
+			populate: {
+				path: "course",
+				select: "title",
+			},
+		});
+	const lectures = await queryBuilder.getQuery();
+	const meta = await queryBuilder.countTotal();
+	return { lectures, meta };
 };
+
 export const lectureServices = {
 	createIntoDB,
 	getAllFromDB,

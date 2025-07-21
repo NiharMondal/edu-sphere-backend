@@ -6,6 +6,9 @@ import { authGuard } from "../../middleware/authGuard";
 import { ROLE } from "../../constant";
 
 const router = Router();
+
+router.get("/:courseId/course-review", reviewController.getByCourseId);
+
 router.patch(
 	"/:id/undo-accept",
 	authGuard(ROLE.admin),

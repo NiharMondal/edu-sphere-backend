@@ -20,6 +20,17 @@ const getAllFromDB = asyncHandler(async (req: Request, res: Response) => {
 	sendResponse(res, {
 		statusCode: 200,
 		message: "Reviews fetched successfully",
+		result: data.reviews,
+		meta: data?.meta,
+	});
+});
+const getByCourseId = asyncHandler(async (req: Request, res: Response) => {
+	const courseId = req.params.courseId;
+	const data = await reviewServices.getByCourseId(courseId);
+
+	sendResponse(res, {
+		statusCode: 200,
+		message: "Reviews fetched successfully",
 		result: data,
 	});
 });
@@ -65,6 +76,7 @@ const undoAccept = asyncHandler(async (req: Request, res: Response) => {
 export const reviewController = {
 	createIntoDB,
 	getAllFromDB,
+	getByCourseId,
 	acceptReview,
 	deleteDoc,
 	updateDoc,

@@ -77,13 +77,16 @@ const getAllFromDB = async (query: TQuery) => {
 	const res = new QueryBuilder(Review.find(), query)
 		.search(["message"])
 		.filter()
-		.sort();
+		.pagination()
+		.sort()
+		.populate([
+			{ path: "student", select: "name" },
+			{ path: "course", select: "title" },
+		]);
 
-	const reviews = await res.queryModel
-		.populate({ path: "student", select: "name" })
-		.populate({ path: "course", select: "title" });
-
-	return reviews;
+	const reviews = await res.getQuery();
+	const meta = await res.countTotal();
+	return { reviews, meta };
 };
 
 const getById = async (id: string) => {
@@ -96,7 +99,10 @@ const getById = async (id: string) => {
 };
 
 const getByCourseId = async (courseId: string) => {
-	const review = await Review.findOne({ course: courseId });
+	const review = await Review.find({ course: courseId }).populate({
+		path: "student",
+		select: "name",
+	});
 
 	if (!review) {
 		throw new CustomError(404, "Review not found");

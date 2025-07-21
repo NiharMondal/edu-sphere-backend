@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 import asyncHandler from "../../utils/asyncHandler";
 import sendResponse from "../../utils/sendResponse";
 import { lectureServices } from "./lecture.service";
+import { TQuery } from "../../type";
 
 const createIntoDB = asyncHandler(async (req: Request, res: Response) => {
 	const { moduleId } = req.params;
@@ -20,7 +21,8 @@ const getAllFromDB = asyncHandler(async (req: Request, res: Response) => {
 	sendResponse(res, {
 		statusCode: 200,
 		message: "Lecture fetched successfully",
-		result: result,
+		meta: result.meta,
+		result: result.lectures,
 	});
 });
 
@@ -58,14 +60,17 @@ const deleteDoc = asyncHandler(async (req: Request, res: Response) => {
 const assignedLectureToInstructor = asyncHandler(
 	async (req: Request, res: Response) => {
 		const user = req.user;
+		const query = req.query;
 		const result = await lectureServices.assignedLectureToInstructor(
-			user.id
+			user.id,
+			query as TQuery
 		);
 
 		sendResponse(res, {
 			statusCode: 200,
 			message: "Assigned Lecture fetched successfully",
-			result: result,
+			result: result.lectures,
+			meta: result.meta,
 		});
 	}
 );

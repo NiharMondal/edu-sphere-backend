@@ -4,4 +4,4 @@ export const ROLE = {
 	admin: "admin",
 } as const;
 
-
+export const PAGE_LIMIT = 10;

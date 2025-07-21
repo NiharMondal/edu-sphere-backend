@@ -8,6 +8,8 @@ import { generateSlug } from "../../utils";
 import { Enrollment } from "../enrollment/enrollment.model";
 import { Notification } from "../notification/notification.model";
 import { getIO } from "../../socket";
+import QueryBuilder from "../../lib/QueryBuilder";
+import { TQuery } from "../../type";
 
 const createIntoDB = async (courseId: string, payload: IModule) => {
 	// double checking by courseId and params
@@ -85,17 +87,21 @@ const createIntoDB = async (courseId: string, payload: IModule) => {
 };
 
 const getAllFromDB = async (query: Record<string, string>) => {
-	const modules = await Module.find()
+	const queryBuilder = new QueryBuilder(Module.find(), query)
+		.search(["title"])
+		.sort()
+		.pagination()
+		.fields()
 		.populate({
 			path: "course",
 			select: "title",
 		})
-		.populate({
-			path: "lectures",
-		})
-		.sort({ createdAt: "desc" });
+		.populate("lectures");
 
-	return modules;
+	const modules = await queryBuilder.getQuery();
+	const meta = await queryBuilder.countTotal();
+
+	return { modules, meta };
 };
 
 const getById = async (id: string) => {
@@ -166,20 +172,23 @@ const deleteDoc = async (id: string) => {
 	}
 };
 
-const assignedModuleToInstructor = async (insId: string) => {
+const assignedModuleToInstructor = async (insId: string, query: TQuery) => {
 	const courses = await Course.find({ instructor: insId });
 	const courseIds = courses.map((c) => c._id);
-	const modules = await Module.find({ course: { $in: courseIds } })
-		.populate({
-			path: "course",
-			select: "title",
-		})
-		.populate({
-			path: "lectures",
-		})
-		.sort({ createdAt: "desc" });
 
-	return modules;
+	const qb = new QueryBuilder(
+		Module.find({ course: { $in: courseIds } }),
+		query
+	)
+		.search(["title"])
+		.sort()
+		.pagination()
+		.fields()
+		.populate([{ path: "course", select: "title" }, { path: "lectures" }]);
+
+	const modules = await qb.getQuery();
+	const meta = await qb.countTotal();
+	return { modules, meta };
 };
 export const moduleServices = {
 	createIntoDB,

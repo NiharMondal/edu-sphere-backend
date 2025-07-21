@@ -36,14 +36,13 @@ const createIntoDB = async (payload: ICourse) => {
 
 const getAllFromDB = async (query: TQuery) => {
 	const res = new QueryBuilder(Course.find({ isDeleted: false }), query)
-		.search(["title"])
-		.filter();
-	const courses = await res.queryModel.populate({
-		path: "instructor",
-		select: "name",
-	});
-
-	return courses;
+		.search(["title", "level", "pricingType"])
+		.filter()
+		.populate({ path: "instructor", select: "name" })
+		.sort();
+	const courses = await res.getQuery();
+	const meta = await res.countTotal();
+	return { meta, courses };
 };
 
 const getById = async (id: string) => {
