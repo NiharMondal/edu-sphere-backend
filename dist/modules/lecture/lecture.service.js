@@ -18,6 +18,7 @@ const CustomError_1 = __importDefault(require("../../utils/CustomError"));
 const module_model_1 = require("../module/module.model");
 const lecture_model_1 = require("./lecture.model");
 const course_model_1 = require("../course/course.model");
+const QueryBuilder_1 = __importDefault(require("../../lib/QueryBuilder"));
 const createIntoDB = (moduleId, payload) => __awaiter(void 0, void 0, void 0, function* () {
     // double checking by moduleId and params
     const module = yield module_model_1.Module.findOne({
@@ -60,7 +61,12 @@ const createIntoDB = (moduleId, payload) => __awaiter(void 0, void 0, void 0, fu
     }
 });
 const getAllFromDB = (query) => __awaiter(void 0, void 0, void 0, function* () {
-    const data = yield lecture_model_1.Lecture.find().populate({
+    const queryBuilder = new QueryBuilder_1.default(lecture_model_1.Lecture.find(), query)
+        .search(["title"])
+        .sort()
+        .pagination()
+        .fields()
+        .populate({
         path: "module",
         select: "title course",
         populate: {
@@ -68,7 +74,12 @@ const getAllFromDB = (query) => __awaiter(void 0, void 0, void 0, function* () {
             select: "title",
         },
     });
-    return data;
+    const lectures = yield queryBuilder.getQuery();
+    const meta = yield queryBuilder.countTotal();
+    return {
+        meta,
+        lectures,
+    };
 });
 const getById = (id) => __awaiter(void 0, void 0, void 0, function* () {
     const data = yield lecture_model_1.Lecture.findById(id);
@@ -97,14 +108,16 @@ const deleteDoc = (id) => __awaiter(void 0, void 0, void 0, function* () {
     const data = yield lecture_model_1.Lecture.findByIdAndDelete(id);
     return data;
 });
-const assignedLectureToInstructor = (insId) => __awaiter(void 0, void 0, void 0, function* () {
+const assignedLectureToInstructor = (insId, query) => __awaiter(void 0, void 0, void 0, function* () {
     const courses = yield course_model_1.Course.find({ instructor: insId });
     const courseIds = courses.map((c) => c._id);
     const modules = yield module_model_1.Module.find({ course: { $in: courseIds } });
     const modulesId = modules.map((m) => m === null || m === void 0 ? void 0 : m._id);
-    const lectures = yield lecture_model_1.Lecture.find({
-        module: { $in: modulesId },
-    }).populate({
+    const queryBuilder = new QueryBuilder_1.default(lecture_model_1.Lecture.find({ module: { $in: modulesId } }), query)
+        .search(["title"])
+        .sort()
+        .pagination()
+        .populate({
         path: "module",
         select: "title course",
         populate: {
@@ -112,7 +125,9 @@ const assignedLectureToInstructor = (insId) => __awaiter(void 0, void 0, void 0,
             select: "title",
         },
     });
-    return lectures;
+    const lectures = yield queryBuilder.getQuery();
+    const meta = yield queryBuilder.countTotal();
+    return { lectures, meta };
 });
 exports.lectureServices = {
     createIntoDB,

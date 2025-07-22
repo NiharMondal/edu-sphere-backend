@@ -3,10 +3,10 @@ import { INotification } from "./notification.interface";
 
 const notificationSchema = new Schema<INotification>(
 	{
-		student: {
+		user: {
 			type: Schema.Types.ObjectId,
 			ref: "User",
-			required: [true, "Student ID is required"],
+			required: [true, "User ID is required"],
 		},
 		message: {
 			type: String,

@@ -71,11 +71,15 @@ const getAllFromDB = (query) => __awaiter(void 0, void 0, void 0, function* () {
     const res = new QueryBuilder_1.default(review_model_1.Review.find(), query)
         .search(["message"])
         .filter()
-        .sort();
-    const reviews = yield res.queryModel
-        .populate({ path: "student", select: "name" })
-        .populate({ path: "course", select: "title" });
-    return reviews;
+        .pagination()
+        .sort()
+        .populate([
+        { path: "student", select: "name" },
+        { path: "course", select: "title" },
+    ]);
+    const reviews = yield res.getQuery();
+    const meta = yield res.countTotal();
+    return { reviews, meta };
 });
 const getById = (id) => __awaiter(void 0, void 0, void 0, function* () {
     const data = yield review_model_1.Review.findById(id);
@@ -85,7 +89,10 @@ const getById = (id) => __awaiter(void 0, void 0, void 0, function* () {
     return data;
 });
 const getByCourseId = (courseId) => __awaiter(void 0, void 0, void 0, function* () {
-    const review = yield review_model_1.Review.findOne({ course: courseId });
+    const review = yield review_model_1.Review.find({ course: courseId }).populate({
+        path: "student",
+        select: "name",
+    });
     if (!review) {
         throw new CustomError_1.default(404, "Review not found");
     }

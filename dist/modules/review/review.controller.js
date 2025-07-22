@@ -29,6 +29,16 @@ const getAllFromDB = (0, asyncHandler_1.default)((req, res) => __awaiter(void 0,
     (0, sendResponse_1.default)(res, {
         statusCode: 200,
         message: "Reviews fetched successfully",
+        result: data.reviews,
+        meta: data === null || data === void 0 ? void 0 : data.meta,
+    });
+}));
+const getByCourseId = (0, asyncHandler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const courseId = req.params.courseId;
+    const data = yield review_service_1.reviewServices.getByCourseId(courseId);
+    (0, sendResponse_1.default)(res, {
+        statusCode: 200,
+        message: "Reviews fetched successfully",
         result: data,
     });
 }));
@@ -67,6 +77,7 @@ const undoAccept = (0, asyncHandler_1.default)((req, res) => __awaiter(void 0, v
 exports.reviewController = {
     createIntoDB,
     getAllFromDB,
+    getByCourseId,
     acceptReview,
     deleteDoc,
     updateDoc,

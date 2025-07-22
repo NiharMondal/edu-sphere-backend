@@ -21,8 +21,10 @@ const lecture_model_1 = require("../lecture/lecture.model");
 const module_model_1 = require("../module/module.model");
 const course_model_1 = require("./course.model");
 const user_model_1 = require("../user/user.model");
+const notification_model_1 = require("../notification/notification.model");
+const socket_1 = require("../../socket");
 const createIntoDB = (payload) => __awaiter(void 0, void 0, void 0, function* () {
-    const existedCourse = yield course_model_1.Course.findOne({ slug: payload.slug });
+    const existedCourse = yield course_model_1.Course.findOne({ title: payload.title });
     if (existedCourse) {
         throw new CustomError_1.default(302, "Course title is already exist!");
     }
@@ -35,18 +37,38 @@ const createIntoDB = (payload) => __awaiter(void 0, void 0, void 0, function* ()
         throw new CustomError_1.default(302, "Instructor does not exist");
     }
     const slug = (0, utils_1.generateSlug)(payload.title);
-    const data = yield course_model_1.Course.create(Object.assign(Object.assign({}, payload), { slug: slug }));
-    return data;
+    const session = yield mongoose_1.default.startSession();
+    session.startTransaction();
+    try {
+        const course = new course_model_1.Course(Object.assign(Object.assign({}, payload), { slug: slug }));
+        const notification = new notification_model_1.Notification({
+            user: course.instructor,
+            message: `Your have been assigned to ${course.title}`,
+            type: "assigned-as-instructor",
+        });
+        yield course.save({ session });
+        yield notification.save({ session });
+        const io = (0, socket_1.getIO)();
+        io.to(course.instructor.toString()).emit("new-notification", notification);
+        yield session.commitTransaction();
+        yield session.endSession();
+    }
+    catch (error) {
+        yield session.abortTransaction();
+        yield session.endSession();
+        console.log(error);
+        throw new CustomError_1.default(400, "Could not create course");
+    }
 });
 const getAllFromDB = (query) => __awaiter(void 0, void 0, void 0, function* () {
     const res = new QueryBuilder_1.default(course_model_1.Course.find({ isDeleted: false }), query)
-        .search(["title"])
-        .filter();
-    const courses = yield res.queryModel.populate({
-        path: "instructor",
-        select: "name",
-    });
-    return courses;
+        .search(["title", "level", "pricingType"])
+        .filter()
+        .populate({ path: "instructor", select: "name" })
+        .sort();
+    const courses = yield res.getQuery();
+    const meta = yield res.countTotal();
+    return { meta, courses };
 });
 const getById = (id) => __awaiter(void 0, void 0, void 0, function* () {
     const data = yield course_model_1.Course.findById(id)

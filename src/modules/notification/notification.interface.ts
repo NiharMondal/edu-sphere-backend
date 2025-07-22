@@ -1,7 +1,7 @@
 import { Types } from "mongoose";
 
 export interface INotification {
-	student: Types.ObjectId;
+	user: Types.ObjectId;
 	message: string;
 	isRead: boolean;
 	link: string;

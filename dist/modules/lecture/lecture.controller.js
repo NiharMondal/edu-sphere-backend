@@ -30,7 +30,8 @@ const getAllFromDB = (0, asyncHandler_1.default)((req, res) => __awaiter(void 0,
     (0, sendResponse_1.default)(res, {
         statusCode: 200,
         message: "Lecture fetched successfully",
-        result: result,
+        meta: result.meta,
+        result: result.lectures,
     });
 }));
 const getById = (0, asyncHandler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
@@ -60,11 +61,13 @@ const deleteDoc = (0, asyncHandler_1.default)((req, res) => __awaiter(void 0, vo
 }));
 const assignedLectureToInstructor = (0, asyncHandler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const user = req.user;
-    const result = yield lecture_service_1.lectureServices.assignedLectureToInstructor(user.id);
+    const query = req.query;
+    const result = yield lecture_service_1.lectureServices.assignedLectureToInstructor(user.id, query);
     (0, sendResponse_1.default)(res, {
         statusCode: 200,
         message: "Assigned Lecture fetched successfully",
-        result: result,
+        result: result.lectures,
+        meta: result.meta,
     });
 }));
 exports.lectureController = {

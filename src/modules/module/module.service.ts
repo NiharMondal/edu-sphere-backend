@@ -50,7 +50,7 @@ const createIntoDB = async (courseId: string, payload: IModule) => {
 
 		for (const enrollment of enrollments) {
 			const notification = new Notification({
-				student: enrollment.student,
+				user: enrollment.student,
 				message: `Module ${module.index}: ${module.title} has been released`,
 				type: "module-update",
 			});

@@ -1,5 +1,7 @@
 // notification has been created when user enroll the course
 
+import QueryBuilder from "../../lib/QueryBuilder";
+import { TQuery } from "../../type";
 import { Notification } from "./notification.model";
 
 const getAllFromDB = async () => {
@@ -7,17 +9,20 @@ const getAllFromDB = async () => {
 	return notifications;
 };
 
-const getByStudentId = async (sId: string) => {
-	const notifications = await Notification.find({ student: sId }).sort({
-		createdAt: -1,
-	});
+const getByUserId = async (id: string, query: TQuery) => {
+	const qb = new QueryBuilder(Notification.find({ user: id }), query)
+		.pagination()
+		.sort();
 
-	return notifications;
+	const notifications = await qb.getQuery();
+	const meta = await qb.countTotal();
+
+	return { meta, notifications };
 };
 
-const markRead = async (nId: string, sId: string) => {
+const markRead = async (nId: string, uId: string) => {
 	const notification = await Notification.findOneAndUpdate(
-		{ _id: nId, student: sId },
+		{ _id: nId, user: uId },
 		{ isRead: true },
 		{ new: true }
 	);
@@ -25,9 +30,9 @@ const markRead = async (nId: string, sId: string) => {
 	return notification;
 };
 
-const markAllRead = async (sId: string) => {
+const markAllRead = async (uId: string) => {
 	const notifications = await Notification.updateMany(
-		{ student: sId, isRead: false },
+		{ user: uId, isRead: false },
 		{ isRead: true }
 	);
 
@@ -36,7 +41,7 @@ const markAllRead = async (sId: string) => {
 
 export const notificationServices = {
 	getAllFromDB,
-	getByStudentId,
+	getByUserId,
 	markRead,
 	markAllRead,
 };

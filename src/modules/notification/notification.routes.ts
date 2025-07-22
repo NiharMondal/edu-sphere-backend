@@ -7,18 +7,18 @@ const router = Router();
 
 router.patch(
 	"/mark-all-read",
-	authGuard(ROLE.student),
+	authGuard(ROLE.student, ROLE.instructor),
 	notificationController.markAllRead
 );
 router.get(
-	"/student-notification",
-	authGuard(ROLE.student),
-	notificationController.getByStudentId
+	"/my-notifications",
+	authGuard(ROLE.student, ROLE.instructor),
+	notificationController.getByUserId
 );
 
 router.patch(
 	"/:id/read",
-	authGuard(ROLE.student),
+	authGuard(ROLE.student, ROLE.instructor),
 	notificationController.markRead
 );
 

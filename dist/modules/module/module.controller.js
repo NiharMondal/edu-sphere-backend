@@ -30,7 +30,8 @@ const getAllFromDB = (0, asyncHandler_1.default)((req, res) => __awaiter(void 0,
     (0, sendResponse_1.default)(res, {
         statusCode: 200,
         message: "Module fetched successfully",
-        result: result,
+        result: result.modules,
+        meta: result.meta,
     });
 }));
 const getById = (0, asyncHandler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
@@ -68,11 +69,12 @@ const deleteDoc = (0, asyncHandler_1.default)((req, res) => __awaiter(void 0, vo
 }));
 const assignedModuleToInstructor = (0, asyncHandler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const user = req.user;
-    const result = yield module_service_1.moduleServices.assignedModuleToInstructor(user.id);
+    const result = yield module_service_1.moduleServices.assignedModuleToInstructor(user.id, req.query);
     (0, sendResponse_1.default)(res, {
         statusCode: 200,
         message: "Module fetched by instructor successfully",
-        result: result,
+        result: result.modules,
+        meta: result === null || result === void 0 ? void 0 : result.meta,
     });
 }));
 exports.moduleController = {

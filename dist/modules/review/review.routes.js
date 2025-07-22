@@ -8,6 +8,7 @@ const review_validation_1 = require("./review.validation");
 const authGuard_1 = require("../../middleware/authGuard");
 const constant_1 = require("../../constant");
 const router = (0, express_1.Router)();
+router.get("/:courseId/course-review", review_controller_1.reviewController.getByCourseId);
 router.patch("/:id/undo-accept", (0, authGuard_1.authGuard)(constant_1.ROLE.admin), review_controller_1.reviewController.undoAccept);
 router.patch("/:id/accept", (0, authGuard_1.authGuard)(constant_1.ROLE.admin), review_controller_1.reviewController.acceptReview);
 router.route("/:id");

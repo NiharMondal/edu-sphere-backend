@@ -29,7 +29,8 @@ const getAllFromDB = (0, asyncHandler_1.default)((req, res) => __awaiter(void 0,
     (0, sendResponse_1.default)(res, {
         statusCode: 200,
         message: "Course fetched successfully",
-        result: result,
+        result: result.courses,
+        meta: result.meta,
     });
 }));
 const getById = (0, asyncHandler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {

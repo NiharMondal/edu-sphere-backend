@@ -1,7 +1,9 @@
 import { Request, Response } from "express";
 import asyncHandler from "../../utils/asyncHandler";
-import { notificationServices } from "./notificcation.service";
+
 import sendResponse from "../../utils/sendResponse";
+import { notificationServices } from "./notification.service";
+import { TQuery } from "../../type";
 
 const getAllFromDB = asyncHandler(async (req: Request, res: Response) => {
 	const result = await notificationServices.getAllFromDB();
@@ -12,21 +14,25 @@ const getAllFromDB = asyncHandler(async (req: Request, res: Response) => {
 		result: result,
 	});
 });
-const getByStudentId = asyncHandler(async (req: Request, res: Response) => {
+const getByUserId = asyncHandler(async (req: Request, res: Response) => {
 	const id = req.user.id;
-	const result = await notificationServices.getByStudentId(id);
+	const result = await notificationServices.getByUserId(
+		id,
+		req.query as TQuery
+	);
 
 	sendResponse(res, {
 		statusCode: 200,
 		message: "Notifications fetched successfully by student ID",
-		result: result,
+		result: result.notifications,
+		meta: result.meta,
 	});
 });
 const markRead = asyncHandler(async (req: Request, res: Response) => {
 	const nId = req.params.id;
-	const sId = req.user.id;
+	const uId = req.user.id;
 
-	const result = await notificationServices.markRead(nId, sId);
+	const result = await notificationServices.markRead(nId, uId);
 
 	sendResponse(res, {
 		statusCode: 200,
@@ -47,7 +53,7 @@ const markAllRead = asyncHandler(async (req: Request, res: Response) => {
 
 export const notificationController = {
 	getAllFromDB,
-	getByStudentId,
+	getByUserId,
 	markAllRead,
 	markRead,
 };

@@ -8,9 +8,12 @@ import { ICourse } from "./course.interface";
 import { Course } from "./course.model";
 import { User } from "../user/user.model";
 import { TQuery } from "../../type";
+import { Notification } from "../notification/notification.model";
+import { getIO } from "../../socket";
 
 const createIntoDB = async (payload: ICourse) => {
-	const existedCourse = await Course.findOne({ slug: payload.slug });
+	const existedCourse = await Course.findOne({ title: payload.title });
+
 	if (existedCourse) {
 		throw new CustomError(302, "Course title is already exist!");
 	}
@@ -26,12 +29,39 @@ const createIntoDB = async (payload: ICourse) => {
 	}
 
 	const slug = generateSlug(payload.title);
-	const data = await Course.create({
-		...payload,
-		slug: slug,
-	});
 
-	return data;
+	const session = await mongoose.startSession();
+	session.startTransaction();
+
+	try {
+		const course = new Course({
+			...payload,
+			slug: slug,
+		});
+
+		const notification = new Notification({
+			user: course.instructor,
+			message: `Your have been assigned to ${course.title}`,
+			type: "assigned-as-instructor",
+		});
+
+		await course.save({ session });
+		await notification.save({ session });
+
+		const io = getIO();
+		io.to(course.instructor.toString()).emit(
+			"new-notification",
+			notification
+		);
+
+		await session.commitTransaction();
+		await session.endSession();
+	} catch (error) {
+		await session.abortTransaction();
+		await session.endSession();
+		console.log(error);
+		throw new CustomError(400, "Could not create course");
+	}
 };
 
 const getAllFromDB = async (query: TQuery) => {

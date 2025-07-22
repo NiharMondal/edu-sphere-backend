@@ -9,6 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+const constant_1 = require("../constant");
 class QueryBuilder {
     constructor(queryModel, query) {
         this.queryModel = queryModel;
@@ -26,90 +27,99 @@ class QueryBuilder {
             "minBudget",
             "fields",
         ];
-        // deleting item from main query
         excludedFields.forEach((field) => delete queryCopy[field]);
-        if (this === null || this === void 0 ? void 0 : this.query) {
-            this.queryModel = this.queryModel.find(queryCopy);
-        }
+        const mongoQuery = {};
+        Object.entries(queryCopy).forEach(([key, value]) => {
+            if (typeof value === "string" && value.includes(",")) {
+                // For multi-value filters like category=design,development
+                mongoQuery[key] = { $in: value.split(",") };
+            }
+            else {
+                mongoQuery[key] = value;
+            }
+        });
+        this.queryModel = this.queryModel.find(mongoQuery);
         return this;
     }
     search(searchableFields) {
-        var _a;
-        if ((_a = this === null || this === void 0 ? void 0 : this.query) === null || _a === void 0 ? void 0 : _a.search) {
-            this.queryModel = this.queryModel.find({
-                $or: searchableFields.map((field) => {
-                    var _a;
-                    return ({
-                        [field]: {
-                            $regex: (_a = this === null || this === void 0 ? void 0 : this.query) === null || _a === void 0 ? void 0 : _a.search,
-                            $options: "i",
-                        },
-                    });
-                }),
+        var _a, _b;
+        const searchTerm = (_b = (_a = this.query) === null || _a === void 0 ? void 0 : _a.search) === null || _b === void 0 ? void 0 : _b.trim();
+        if (searchTerm && searchableFields.length > 0) {
+            const regex = new RegExp(searchTerm, "i");
+            const orConditions = searchableFields.map((field) => {
+                return {
+                    [field]: { $regex: regex },
+                };
             });
+            this.queryModel = this.queryModel.find({ $or: orConditions });
         }
         return this;
     }
     budget() {
         var _a, _b;
-        const minPrice = Number((_a = this === null || this === void 0 ? void 0 : this.query) === null || _a === void 0 ? void 0 : _a.minBudget) || 0;
-        const maxPrice = Number((_b = this === null || this === void 0 ? void 0 : this.query) === null || _b === void 0 ? void 0 : _b.maxBudget) || 50000;
-        if (minPrice || maxPrice) {
+        const min = (_a = this.query) === null || _a === void 0 ? void 0 : _a.minBudget;
+        const max = (_b = this.query) === null || _b === void 0 ? void 0 : _b.maxBudget;
+        if (min || max) {
             this.queryModel = this.queryModel.find({
-                budget: { $gte: minPrice, $lte: maxPrice },
+                budget: Object.assign(Object.assign({}, (min ? { $gte: Number(min) } : {})), (max ? { $lte: Number(max) } : {})),
             });
         }
         return this;
     }
     sort() {
         var _a, _b;
-        const sortBy = ((_a = this.query) === null || _a === void 0 ? void 0 : _a.sortBy) || "createdAt";
-        const order = ((_b = this.query) === null || _b === void 0 ? void 0 : _b.order) || "asc";
-        // Validate the sortBy field to ensure it's a valid key
-        const validSortFields = [
-            "title",
-            "rating",
-            "budget",
-            "visitors",
-            "createdAt",
-        ]; // Add valid fields here
-        if (sortBy || order) {
-            if (validSortFields.includes(sortBy)) {
-                // Create a dynamic sort object
-                const sortObj = { [sortBy]: order };
-                this.queryModel = this.queryModel.sort(sortObj);
-            }
+        const sortBy = (_a = this.query) === null || _a === void 0 ? void 0 : _a.sortBy;
+        const order = ((_b = this.query) === null || _b === void 0 ? void 0 : _b.order) === "desc" ? -1 : 1;
+        if (sortBy) {
+            this.queryModel = this.queryModel.sort({ [sortBy]: order });
+        }
+        else {
+            this.queryModel = this.queryModel.sort({ createdAt: order });
         }
         return this;
     }
     pagination() {
         var _a, _b;
-        const p = Number((_a = this === null || this === void 0 ? void 0 : this.query) === null || _a === void 0 ? void 0 : _a.page) || 1;
-        const l = Number((_b = this === null || this === void 0 ? void 0 : this.query) === null || _b === void 0 ? void 0 : _b.limit) || 10;
-        const skip = (p - 1) * l;
-        this.queryModel = this.queryModel.skip(skip).limit(l);
+        const page = Number((_a = this.query) === null || _a === void 0 ? void 0 : _a.page) || 1;
+        const limit = Number((_b = this.query) === null || _b === void 0 ? void 0 : _b.limit) || constant_1.PAGE_LIMIT;
+        const skip = (page - 1) * limit;
+        this.queryModel = this.queryModel.skip(skip).limit(limit);
         return this;
     }
     fields() {
-        var _a, _b;
-        if ((_a = this === null || this === void 0 ? void 0 : this.query) === null || _a === void 0 ? void 0 : _a.fields) {
-            const field = ((_b = this === null || this === void 0 ? void 0 : this.query) === null || _b === void 0 ? void 0 : _b.fields).split(",").join(" ") || "- __v";
-            this.queryModel = this.queryModel.select(field);
+        var _a;
+        if ((_a = this.query) === null || _a === void 0 ? void 0 : _a.fields) {
+            const fieldString = this.query.fields
+                .split(",")
+                .join(" ");
+            this.queryModel = this.queryModel.select(fieldString);
         }
         return this;
+    }
+    populate(fields) {
+        if (fields) {
+            const normalized = typeof fields === "string" || !Array.isArray(fields)
+                ? [fields]
+                : fields;
+            this.queryModel = this.queryModel.populate(normalized);
+        }
+        return this;
+    }
+    getQuery() {
+        return this.queryModel;
     }
     countTotal() {
         return __awaiter(this, void 0, void 0, function* () {
             var _a, _b;
-            const queries = this.queryModel.getFilter();
-            const totalDocs = yield this.queryModel.model.countDocuments(queries);
-            const limit = Number((_a = this.query) === null || _a === void 0 ? void 0 : _a.limit) || 10;
+            const filters = this.queryModel.getFilter();
+            const totalDocs = yield this.queryModel.model.countDocuments(filters);
+            const limit = Number((_a = this.query) === null || _a === void 0 ? void 0 : _a.limit) || constant_1.PAGE_LIMIT;
+            const currentPage = Number((_b = this.query) === null || _b === void 0 ? void 0 : _b.page) || 1;
             const totalPages = Math.ceil(totalDocs / limit);
-            const currentPage = Number((_b = this === null || this === void 0 ? void 0 : this.query) === null || _b === void 0 ? void 0 : _b.page) || 1;
             return {
-                totalDocs,
-                totalPages,
                 currentPage,
+                totalPages,
+                totalDocs,
             };
         });
     }

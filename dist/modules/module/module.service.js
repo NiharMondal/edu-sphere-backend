@@ -22,6 +22,7 @@ const utils_1 = require("../../utils");
 const enrollment_model_1 = require("../enrollment/enrollment.model");
 const notification_model_1 = require("../notification/notification.model");
 const socket_1 = require("../../socket");
+const QueryBuilder_1 = __importDefault(require("../../lib/QueryBuilder"));
 const createIntoDB = (courseId, payload) => __awaiter(void 0, void 0, void 0, function* () {
     // double checking by courseId and params
     const course = yield course_model_1.Course.findOne({
@@ -51,7 +52,7 @@ const createIntoDB = (courseId, payload) => __awaiter(void 0, void 0, void 0, fu
         }).session(session); // second step: this step is for creating notification
         for (const enrollment of enrollments) {
             const notification = new notification_model_1.Notification({
-                student: enrollment.student,
+                user: enrollment.student,
                 message: `Module ${module.index}: ${module.title} has been released`,
                 type: "module-update",
             });
@@ -76,16 +77,19 @@ const createIntoDB = (courseId, payload) => __awaiter(void 0, void 0, void 0, fu
     }
 });
 const getAllFromDB = (query) => __awaiter(void 0, void 0, void 0, function* () {
-    const modules = yield module_model_1.Module.find()
+    const queryBuilder = new QueryBuilder_1.default(module_model_1.Module.find(), query)
+        .search(["title"])
+        .sort()
+        .pagination()
+        .fields()
         .populate({
         path: "course",
         select: "title",
     })
-        .populate({
-        path: "lectures",
-    })
-        .sort({ createdAt: "desc" });
-    return modules;
+        .populate("lectures");
+    const modules = yield queryBuilder.getQuery();
+    const meta = yield queryBuilder.countTotal();
+    return { modules, meta };
 });
 const getById = (id) => __awaiter(void 0, void 0, void 0, function* () {
     const data = yield module_model_1.Module.findById(id).populate({ path: "lectures" });
@@ -140,19 +144,18 @@ const deleteDoc = (id) => __awaiter(void 0, void 0, void 0, function* () {
         throw new CustomError_1.default(500, "Could not delete module");
     }
 });
-const assignedModuleToInstructor = (insId) => __awaiter(void 0, void 0, void 0, function* () {
+const assignedModuleToInstructor = (insId, query) => __awaiter(void 0, void 0, void 0, function* () {
     const courses = yield course_model_1.Course.find({ instructor: insId });
     const courseIds = courses.map((c) => c._id);
-    const modules = yield module_model_1.Module.find({ course: { $in: courseIds } })
-        .populate({
-        path: "course",
-        select: "title",
-    })
-        .populate({
-        path: "lectures",
-    })
-        .sort({ createdAt: "desc" });
-    return modules;
+    const qb = new QueryBuilder_1.default(module_model_1.Module.find({ course: { $in: courseIds } }), query)
+        .search(["title"])
+        .sort()
+        .pagination()
+        .fields()
+        .populate([{ path: "course", select: "title" }, { path: "lectures" }]);
+    const modules = yield qb.getQuery();
+    const meta = yield qb.countTotal();
+    return { modules, meta };
 });
 exports.moduleServices = {
     createIntoDB,
