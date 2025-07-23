@@ -43,7 +43,7 @@ const createIntoDB = (payload) => __awaiter(void 0, void 0, void 0, function* ()
         const course = new course_model_1.Course(Object.assign(Object.assign({}, payload), { slug: slug }));
         const notification = new notification_model_1.Notification({
             user: course.instructor,
-            message: `Your have been assigned to ${course.title}`,
+            message: `You have been assigned to ${course.title}`,
             type: "assigned-as-instructor",
         });
         yield course.save({ session });

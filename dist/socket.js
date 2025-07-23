@@ -7,7 +7,10 @@ const userSocketMap = new Map(); // userId <-> socketId
 const initSocket = (server) => {
     io = new socket_io_1.Server(server, {
         cors: {
-            origin: ["http://localhost:3000"], // Add production domain too
+            origin: [
+                "https://edu-sphere-five.vercel.app",
+                "http://localhost:3000",
+            ],
             credentials: true,
         },
     });

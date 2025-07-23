@@ -8,7 +8,10 @@ const userSocketMap = new Map<string, string>(); // userId <-> socketId
 export const initSocket = (server: HTTPServer) => {
 	io = new IOServer(server, {
 		cors: {
-			origin: ["http://localhost:3000"], // Add production domain too
+			origin: [
+				"https://edu-sphere-five.vercel.app",
+				"http://localhost:3000",
+			],
 			credentials: true,
 		},
 	});

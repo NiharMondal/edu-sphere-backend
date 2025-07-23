@@ -41,7 +41,7 @@ const createIntoDB = async (payload: ICourse) => {
 
 		const notification = new Notification({
 			user: course.instructor,
-			message: `Your have been assigned to ${course.title}`,
+			message: `You have been assigned to ${course.title}`,
 			type: "assigned-as-instructor",
 		});
 
