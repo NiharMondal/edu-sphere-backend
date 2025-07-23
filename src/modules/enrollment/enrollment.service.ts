@@ -92,7 +92,7 @@ const createIntoDB = async (payload: IEnrollment) => {
 
 			//creating notification
 			const notification = new Notification({
-				student: payload.student,
+				user: payload.student,
 				type: "enrollment",
 				message: `Welcome to ${course?.title}`,
 			});
@@ -137,7 +137,7 @@ const createIntoDB = async (payload: IEnrollment) => {
 
 			//creating notification
 			const notification = new Notification({
-				student: payload.student,
+				user: payload.student,
 				type: "enrollment",
 				message: `Welcome to ${course?.title}`,
 			});
@@ -153,7 +153,12 @@ const createIntoDB = async (payload: IEnrollment) => {
 				io.to(socketId).emit("new-notification", notification);
 			}
 			const stripeSession = await stripe.checkout.sessions.create({
-				payment_method_types: ["card"],
+				payment_method_types: [
+					"card",
+					"acss_debit",
+					"paypal",
+					"amazon_pay",
+				],
 				mode: "payment",
 				line_items: [
 					{

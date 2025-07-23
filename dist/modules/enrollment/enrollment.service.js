@@ -84,7 +84,7 @@ const createIntoDB = (payload) => __awaiter(void 0, void 0, void 0, function* ()
             });
             //creating notification
             const notification = new notification_model_1.Notification({
-                student: payload.student,
+                user: payload.student,
                 type: "enrollment",
                 message: `Welcome to ${course === null || course === void 0 ? void 0 : course.title}`,
             });
@@ -119,7 +119,7 @@ const createIntoDB = (payload) => __awaiter(void 0, void 0, void 0, function* ()
             });
             //creating notification
             const notification = new notification_model_1.Notification({
-                student: payload.student,
+                user: payload.student,
                 type: "enrollment",
                 message: `Welcome to ${course === null || course === void 0 ? void 0 : course.title}`,
             });
@@ -130,7 +130,12 @@ const createIntoDB = (payload) => __awaiter(void 0, void 0, void 0, function* ()
                 io.to(socketId).emit("new-notification", notification);
             }
             const stripeSession = yield stripe.checkout.sessions.create({
-                payment_method_types: ["card"],
+                payment_method_types: [
+                    "card",
+                    "acss_debit",
+                    "paypal",
+                    "amazon_pay",
+                ],
                 mode: "payment",
                 line_items: [
                     {
