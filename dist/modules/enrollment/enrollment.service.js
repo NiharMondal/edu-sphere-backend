@@ -71,71 +71,37 @@ const createIntoDB = (payload) => __awaiter(void 0, void 0, void 0, function* ()
     }
     const session = yield mongoose_1.default.startSession();
     session.startTransaction();
-    if (course.pricingType === "free") {
-        try {
-            const progressData = new progress_model_1.Progress(Object.assign(Object.assign({}, payload), { lastWatchedLecture: firstLecture }));
-            yield progressData.save({ session }); // 1st step: creating progress for the requested course
-            //creating enrollment
-            const enrollmentData = new enrollment_model_1.Enrollment({
-                course: payload.course,
-                student: payload.student,
-                progress: progressData._id,
-                pricingType: course === null || course === void 0 ? void 0 : course.pricingType,
-            });
-            //creating notification
-            const notification = new notification_model_1.Notification({
-                user: payload.student,
-                type: "enrollment",
-                message: `Welcome to ${course === null || course === void 0 ? void 0 : course.title}`,
-            });
-            yield notification.save({ session }); // 2nd step: creating notification
-            const io = (0, socket_1.getIO)();
-            const socketId = (0, socket_1.getUserSocketMap)().get(payload.student);
-            if (socketId) {
-                io.to(socketId).emit("new-notification", notification);
-            }
-            yield enrollmentData.save({ session }); //3rd step: at last creating enrollment data
-            //committing transaction
-            yield session.commitTransaction();
-            session.endSession();
-            return enrollmentData;
-        }
-        catch (error) {
-            console.log(error);
-            yield session.abortTransaction();
-            session.endSession();
-            throw new CustomError_1.default(400, "Could not enrolled course");
-        }
-    }
-    else {
-        try {
-            const progressData = new progress_model_1.Progress(Object.assign(Object.assign({}, payload), { lastWatchedLecture: firstLecture }));
-            yield progressData.save({ session }); // 1st step: creating progress for the requested course
+    try {
+        if (course.pricingType === "free") {
+            // Free: Create progress, enrollment, notification
+            const progress = new progress_model_1.Progress(Object.assign(Object.assign({}, payload), { lastWatchedLecture: firstLecture }));
+            yield progress.save({ session });
             const enrollment = new enrollment_model_1.Enrollment({
                 course: payload.course,
                 student: payload.student,
-                progress: progressData._id,
-                pricingType: course === null || course === void 0 ? void 0 : course.pricingType,
+                progress: progress._id,
+                pricingType: course.pricingType,
             });
-            //creating notification
+            yield enrollment.save({ session });
             const notification = new notification_model_1.Notification({
                 user: payload.student,
                 type: "enrollment",
-                message: `Welcome to ${course === null || course === void 0 ? void 0 : course.title}`,
+                message: `Welcome to ${course.title}`,
             });
-            yield notification.save({ session }); // 2nd step: creating notification
-            const io = (0, socket_1.getIO)();
-            const socketId = (0, socket_1.getUserSocketMap)().get(payload.student);
+            yield notification.save({ session });
+            // Emit notification
+            const socketId = (0, socket_1.getUserSocketMap)().get(payload.student.toString());
             if (socketId) {
-                io.to(socketId).emit("new-notification", notification);
+                (0, socket_1.getIO)().to(socketId).emit("new-notification", notification);
             }
+            yield session.commitTransaction();
+            return enrollment;
+        }
+        else {
+            // Paid: Just create Stripe Checkout Session, no DB write here
+            yield session.commitTransaction(); // nothing done, but still clean
             const stripeSession = yield stripe.checkout.sessions.create({
-                payment_method_types: [
-                    "card",
-                    "acss_debit",
-                    "paypal",
-                    "amazon_pay",
-                ],
+                payment_method_types: ["card", "paypal"],
                 mode: "payment",
                 line_items: [
                     {
@@ -152,20 +118,19 @@ const createIntoDB = (payload) => __awaiter(void 0, void 0, void 0, function* ()
                 metadata: {
                     student: payload.student.toString(),
                     course: payload.course.toString(),
-                    enrollmentId: enrollment._id.toString(),
+                    pricingType: course.pricingType,
                 },
             });
-            yield enrollment.save({ session }); // 3rd step: saving enrollment data
-            yield session.commitTransaction();
-            yield session.endSession();
             return { url: stripeSession.url };
         }
-        catch (error) {
-            console.log(error);
-            yield session.abortTransaction();
-            yield session.endSession();
-            throw new CustomError_1.default(400, "Could not enrolled course");
-        }
+    }
+    catch (error) {
+        console.error(error);
+        yield session.abortTransaction();
+        throw new CustomError_1.default(400, "Could not process enrollment");
+    }
+    finally {
+        yield session.endSession();
     }
 });
 const getAllFromDB = (query) => __awaiter(void 0, void 0, void 0, function* () {

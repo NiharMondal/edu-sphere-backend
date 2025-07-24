@@ -74,91 +74,43 @@ const createIntoDB = async (payload: IEnrollment) => {
 	const session = await mongoose.startSession();
 	session.startTransaction();
 
-	if (course.pricingType === "free") {
-		try {
-			const progressData = new Progress({
+	try {
+		if (course.pricingType === "free") {
+			// Free: Create progress, enrollment, notification
+			const progress = new Progress({
 				...payload,
 				lastWatchedLecture: firstLecture,
 			});
-			await progressData.save({ session }); // 1st step: creating progress for the requested course
-
-			//creating enrollment
-			const enrollmentData = new Enrollment({
-				course: payload.course,
-				student: payload.student,
-				progress: progressData._id,
-				pricingType: course?.pricingType,
-			});
-
-			//creating notification
-			const notification = new Notification({
-				user: payload.student,
-				type: "enrollment",
-				message: `Welcome to ${course?.title}`,
-			});
-
-			await notification.save({ session }); // 2nd step: creating notification
-
-			const io = getIO();
-			const socketId = getUserSocketMap().get(
-				payload.student as unknown as string
-			);
-
-			if (socketId) {
-				io.to(socketId).emit("new-notification", notification);
-			}
-			await enrollmentData.save({ session }); //3rd step: at last creating enrollment data
-
-			//committing transaction
-			await session.commitTransaction();
-			session.endSession();
-
-			return enrollmentData;
-		} catch (error) {
-			console.log(error);
-			await session.abortTransaction();
-			session.endSession();
-			throw new CustomError(400, "Could not enrolled course");
-		}
-	} else {
-		try {
-			const progressData = new Progress({
-				...payload,
-				lastWatchedLecture: firstLecture,
-			});
-			await progressData.save({ session }); // 1st step: creating progress for the requested course
+			await progress.save({ session });
 
 			const enrollment = new Enrollment({
 				course: payload.course,
 				student: payload.student,
-				progress: progressData._id,
-				pricingType: course?.pricingType,
+				progress: progress._id,
+				pricingType: course.pricingType,
 			});
+			await enrollment.save({ session });
 
-			//creating notification
 			const notification = new Notification({
 				user: payload.student,
 				type: "enrollment",
-				message: `Welcome to ${course?.title}`,
+				message: `Welcome to ${course.title}`,
 			});
+			await notification.save({ session });
 
-			await notification.save({ session }); // 2nd step: creating notification
-
-			const io = getIO();
-			const socketId = getUserSocketMap().get(
-				payload.student as unknown as string
-			);
-
+			// Emit notification
+			const socketId = getUserSocketMap().get(payload.student.toString());
 			if (socketId) {
-				io.to(socketId).emit("new-notification", notification);
+				getIO().to(socketId).emit("new-notification", notification);
 			}
+
+			await session.commitTransaction();
+			return enrollment;
+		} else {
+			// Paid: Just create Stripe Checkout Session, no DB write here
+			await session.commitTransaction(); // nothing done, but still clean
 			const stripeSession = await stripe.checkout.sessions.create({
-				payment_method_types: [
-					"card",
-					"acss_debit",
-					"paypal",
-					"amazon_pay",
-				],
+				payment_method_types: ["card", "paypal"],
 				mode: "payment",
 				line_items: [
 					{
@@ -170,28 +122,23 @@ const createIntoDB = async (payload: IEnrollment) => {
 						quantity: 1,
 					},
 				],
-
 				success_url: `${envConfig.front_end_url}/success?session_id={CHECKOUT_SESSION_ID}`,
 				cancel_url: `${envConfig.front_end_url}/cancel`,
 				metadata: {
 					student: payload.student.toString(),
 					course: payload.course.toString(),
-					enrollmentId: enrollment._id.toString(),
+					pricingType: course.pricingType,
 				},
 			} satisfies Stripe.Checkout.SessionCreateParams);
 
-			await enrollment.save({ session }); // 3rd step: saving enrollment data
-
-			await session.commitTransaction();
-			await session.endSession();
-
 			return { url: stripeSession.url };
-		} catch (error) {
-			console.log(error);
-			await session.abortTransaction();
-			await session.endSession();
-			throw new CustomError(400, "Could not enrolled course");
 		}
+	} catch (error) {
+		console.error(error);
+		await session.abortTransaction();
+		throw new CustomError(400, "Could not process enrollment");
+	} finally {
+		await session.endSession();
 	}
 };
 
