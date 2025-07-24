@@ -15,7 +15,7 @@ const payment_model_1 = require("../payment/payment.model");
 const user_model_1 = require("../user/user.model");
 const generalInformation = () => __awaiter(void 0, void 0, void 0, function* () {
     const studentCount = yield user_model_1.User.countDocuments({ role: "student" });
-    const instructorCount = yield user_model_1.User.countDocuments({ role: "student" });
+    const instructorCount = yield user_model_1.User.countDocuments({ role: "instructor" });
     const courseCount = yield course_model_1.Course.countDocuments();
     const totalEarning = yield payment_model_1.PaymentHistory.find();
     const subTotal = totalEarning.reduce((acc, curr) => curr.amount + acc, 0);

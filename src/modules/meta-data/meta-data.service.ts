@@ -4,7 +4,7 @@ import { User } from "../user/user.model";
 
 const generalInformation = async () => {
 	const studentCount = await User.countDocuments({ role: "student" });
-	const instructorCount = await User.countDocuments({ role: "student" });
+	const instructorCount = await User.countDocuments({ role: "instructor" });
 	const courseCount = await Course.countDocuments();
 	const totalEarning = await PaymentHistory.find();
 	const subTotal = totalEarning.reduce((acc, curr) => curr.amount + acc, 0);
