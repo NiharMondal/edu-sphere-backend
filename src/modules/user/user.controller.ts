@@ -2,15 +2,16 @@ import { Request, Response } from "express";
 import asyncHandler from "../../utils/asyncHandler";
 import sendResponse from "../../utils/sendResponse";
 import { userServices } from "./user.service";
-import { Types } from "mongoose";
+import { TQuery } from "../../type";
 
 const getAllFromDB = asyncHandler(async (req: Request, res: Response) => {
-	const result = await userServices.getAllFromDB(req.query as {});
+	const result = await userServices.getAllFromDB(req.query as TQuery);
 
 	sendResponse(res, {
 		statusCode: 200,
 		message: "User fetched successfully",
-		result: result,
+		meta: result?.meta,
+		result: result.users,
 	});
 });
 
@@ -21,16 +22,6 @@ const getUserById = asyncHandler(async (req: Request, res: Response) => {
 	sendResponse(res, {
 		statusCode: 200,
 		message: "User fetched successfully",
-		result: result,
-	});
-});
-
-const getInstructors = asyncHandler(async (req: Request, res: Response) => {
-	const result = await userServices.getInstructors();
-
-	sendResponse(res, {
-		statusCode: 200,
-		message: "Instructors fetched successfully",
 		result: result,
 	});
 });
@@ -67,11 +58,9 @@ const getMyProfile = asyncHandler(async (req: Request, res: Response) => {
 });
 
 export const userController = {
-	getInstructors,
 	getAllFromDB,
 	getUserById,
 	updateDoc,
 	updateRole,
-
 	getMyProfile,
 };

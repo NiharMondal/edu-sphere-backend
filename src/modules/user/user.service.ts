@@ -2,15 +2,22 @@ import CustomError from "../../utils/CustomError";
 import { IUser } from "./user.interface";
 import { User } from "./user.model";
 import QueryBuilder from "../../lib/QueryBuilder";
+import { TQuery } from "../../type";
+import { Enrollment } from "../enrollment/enrollment.model";
 
-const getAllFromDB = async (query: Record<string, string>) => {
-	const res = new QueryBuilder(User.find(), query)
-		.search(["name"])
+const getAllFromDB = async (query: TQuery) => {
+	const res = new QueryBuilder(User.find({ isDeleted: false }), query)
+		.search(["name", "email"])
 		.filter()
-		.fields();
-	const users = await res.queryModel.select("-password");
+		.pagination()
+		.sort()
+		.fields()
+		.select("name email role phone createdAt avatar");
 
-	return users;
+	const users = await res.getQuery();
+	const meta = await res.countTotal();
+
+	return { users, meta };
 };
 
 const getUserById = async (id: string) => {
@@ -20,15 +27,6 @@ const getUserById = async (id: string) => {
 		throw new CustomError(404, "User not found");
 	}
 	return user;
-};
-
-const getInstructors = async () => {
-	const res = await User.find({
-		role: "instructor",
-		isDeleted: false,
-	}).select("name email role");
-
-	return res;
 };
 
 const updateDoc = async (
@@ -52,19 +50,28 @@ const updateDoc = async (
 };
 
 const updateRole = async (id: string, payload: { role: string }) => {
-	const res = await User.findByIdAndUpdate(
-		id,
-		{
-			$set: {
-				...payload,
-			},
-		},
-		{ new: true, runValidators: true }
-	).select("name email role");
+	const user = await User.findById(id);
 
-	if (!res) {
+	if (!user) {
 		throw new CustomError(404, "User not found!");
 	}
+
+	if (user.role === "instructor" && payload.role === "student") {
+		throw new CustomError(400, "Instructor can not be a student");
+	}
+
+	const findEnrollments = await Enrollment.findOne({ student: id });
+	if (findEnrollments) {
+		throw new CustomError(
+			400,
+			"Sorry, This user already enrolled a course!"
+		);
+	}
+	const res = await User.findByIdAndUpdate(
+		id,
+		{ ...payload },
+		{ new: true, runValidators: true }
+	).select("name email role");
 	return res;
 };
 
@@ -79,9 +86,7 @@ const getMyProfile = async (id: string) => {
 export const userServices = {
 	getAllFromDB,
 	getUserById,
-	getInstructors,
 	updateDoc,
 	updateRole,
-
 	getMyProfile,
 };

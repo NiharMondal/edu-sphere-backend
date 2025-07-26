@@ -110,9 +110,8 @@ class QueryBuilder<T> {
 
 	fields() {
 		if (this.query?.fields) {
-			const fieldString = (this.query.fields as string)
-				.split(",")
-				.join(" ");
+			const fieldString =
+				(this.query.fields as string).split(",").join(" ") || "-__v";
 			this.queryModel = this.queryModel.select(fieldString);
 		}
 		return this;
@@ -127,6 +126,12 @@ class QueryBuilder<T> {
 
 			this.queryModel = this.queryModel.populate(normalized);
 		}
+		return this;
+	}
+
+	select(keys: string) {
+		this.queryModel = this.queryModel.select(keys);
+
 		return this;
 	}
 

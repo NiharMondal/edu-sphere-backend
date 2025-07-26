@@ -27,6 +27,9 @@ router
 		validateRequest(reviewValidation.createReview),
 		reviewController.createIntoDB
 	)
-	.get(authGuard(ROLE.admin), reviewController.getAllFromDB);
+	.get(
+		// authGuard(ROLE.admin),
+		reviewController.getAllFromDB
+	);
 
 export const reviewRoute = router;

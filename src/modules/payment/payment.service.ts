@@ -13,6 +13,7 @@ import { IModule } from "../module/module.interface";
 import { ILecture } from "../lecture/lecture.interface";
 import { getIO, getUserSocketMap } from "../../socket";
 import { Notification } from "../notification/notification.model";
+import { TQuery } from "../../type";
 
 type ExtendLecture = ILecture & { _id: Types.ObjectId };
 
@@ -145,15 +146,22 @@ const createIntoDB = async (body: any, sig: any) => {
 	}
 };
 
-const getAllFromDB = async (query: Record<string, string>) => {
-	const data = new QueryBuilder(PaymentHistory.find(), query).sort();
+const getAllFromDB = async (query: TQuery) => {
+	const queryBuilder = new QueryBuilder(PaymentHistory.find(), query)
+		.search(["paymentIntentId"])
+		.filter()
+		.pagination()
+		.sort()
+		.fields()
+		.populate([
+			{ path: "student", select: "name" },
+			{ path: "course", select: "title" },
+		]);
 
-	const paymentHistory = await data.queryModel
-		.populate({ path: "student", select: "name" })
-		.populate({ path: "course", select: "title" })
-		.select("paymentIntentId student course amount");
+	const paymentHistory = await queryBuilder.getQuery();
+	const meta = await queryBuilder.countTotal();
 
-	return paymentHistory;
+	return { meta, paymentHistory };
 };
 
 export const paymentServices = { createIntoDB, getAllFromDB };
