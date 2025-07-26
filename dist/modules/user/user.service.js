@@ -16,13 +16,18 @@ exports.userServices = void 0;
 const CustomError_1 = __importDefault(require("../../utils/CustomError"));
 const user_model_1 = require("./user.model");
 const QueryBuilder_1 = __importDefault(require("../../lib/QueryBuilder"));
+const enrollment_model_1 = require("../enrollment/enrollment.model");
 const getAllFromDB = (query) => __awaiter(void 0, void 0, void 0, function* () {
-    const res = new QueryBuilder_1.default(user_model_1.User.find(), query)
-        .search(["name"])
+    const res = new QueryBuilder_1.default(user_model_1.User.find({ isDeleted: false }), query)
+        .search(["name", "email"])
         .filter()
-        .fields();
-    const users = yield res.queryModel.select("-password");
-    return users;
+        .pagination()
+        .sort()
+        .fields()
+        .select("name email role phone createdAt avatar");
+    const users = yield res.getQuery();
+    const meta = yield res.countTotal();
+    return { users, meta };
 });
 const getUserById = (id) => __awaiter(void 0, void 0, void 0, function* () {
     const user = yield user_model_1.User.findById(id).select("-password");
@@ -30,13 +35,6 @@ const getUserById = (id) => __awaiter(void 0, void 0, void 0, function* () {
         throw new CustomError_1.default(404, "User not found");
     }
     return user;
-});
-const getInstructors = () => __awaiter(void 0, void 0, void 0, function* () {
-    const res = yield user_model_1.User.find({
-        role: "instructor",
-        isDeleted: false,
-    }).select("name email role");
-    return res;
 });
 const updateDoc = (id, payload) => __awaiter(void 0, void 0, void 0, function* () {
     const res = yield user_model_1.User.findByIdAndUpdate(id, {
@@ -48,12 +46,18 @@ const updateDoc = (id, payload) => __awaiter(void 0, void 0, void 0, function* (
     return res;
 });
 const updateRole = (id, payload) => __awaiter(void 0, void 0, void 0, function* () {
-    const res = yield user_model_1.User.findByIdAndUpdate(id, {
-        $set: Object.assign({}, payload),
-    }, { new: true, runValidators: true }).select("name email role");
-    if (!res) {
+    const user = yield user_model_1.User.findById(id);
+    if (!user) {
         throw new CustomError_1.default(404, "User not found!");
     }
+    if (user.role === "instructor" && payload.role === "student") {
+        throw new CustomError_1.default(400, "Instructor can not be a student");
+    }
+    const findEnrollments = yield enrollment_model_1.Enrollment.findOne({ student: id });
+    if (findEnrollments) {
+        throw new CustomError_1.default(400, "Sorry, This user already enrolled a course!");
+    }
+    const res = yield user_model_1.User.findByIdAndUpdate(id, Object.assign({}, payload), { new: true, runValidators: true }).select("name email role");
     return res;
 });
 const getMyProfile = (id) => __awaiter(void 0, void 0, void 0, function* () {
@@ -66,7 +70,6 @@ const getMyProfile = (id) => __awaiter(void 0, void 0, void 0, function* () {
 exports.userServices = {
     getAllFromDB,
     getUserById,
-    getInstructors,
     updateDoc,
     updateRole,
     getMyProfile,

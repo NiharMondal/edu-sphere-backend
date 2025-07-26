@@ -10,8 +10,6 @@ router.patch("/:id", user_controller_1.userController.updateDoc);
 router.get("/my-profile", (0, authGuard_1.authGuard)(constant_1.ROLE.admin, constant_1.ROLE.student, constant_1.ROLE.instructor), user_controller_1.userController.getMyProfile);
 router.patch("/update-role/:id", (0, authGuard_1.authGuard)(constant_1.ROLE.admin), // only admin can update user's role
 user_controller_1.userController.updateRole);
-//get instructor
-router.get("/instructors", user_controller_1.userController.getInstructors);
 //get user
 router.get("/:id", user_controller_1.userController.getUserById);
 router.get("/", user_controller_1.userController.getAllFromDB);

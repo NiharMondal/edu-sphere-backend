@@ -31,7 +31,8 @@ const getAllFromDB = (0, asyncHandler_1.default)((req, res) => __awaiter(void 0,
     (0, sendResponse_1.default)(res, {
         statusCode: 200,
         message: "Payment fetched successfully",
-        result: data,
+        meta: data.meta,
+        result: data.paymentHistory,
     });
 }));
 exports.paymentController = { createIntoDB, getAllFromDB };

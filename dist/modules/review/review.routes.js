@@ -15,5 +15,7 @@ router.route("/:id");
 router
     .route("/")
     .post((0, validateRequest_1.validateRequest)(review_validation_1.reviewValidation.createReview), review_controller_1.reviewController.createIntoDB)
-    .get((0, authGuard_1.authGuard)(constant_1.ROLE.admin), review_controller_1.reviewController.getAllFromDB);
+    .get(
+// authGuard(ROLE.admin),
+review_controller_1.reviewController.getAllFromDB);
 exports.reviewRoute = router;

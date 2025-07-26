@@ -89,9 +89,7 @@ class QueryBuilder {
     fields() {
         var _a;
         if ((_a = this.query) === null || _a === void 0 ? void 0 : _a.fields) {
-            const fieldString = this.query.fields
-                .split(",")
-                .join(" ");
+            const fieldString = this.query.fields.split(",").join(" ") || "-__v";
             this.queryModel = this.queryModel.select(fieldString);
         }
         return this;
@@ -103,6 +101,10 @@ class QueryBuilder {
                 : fields;
             this.queryModel = this.queryModel.populate(normalized);
         }
+        return this;
+    }
+    select(keys) {
+        this.queryModel = this.queryModel.select(keys);
         return this;
     }
     getQuery() {

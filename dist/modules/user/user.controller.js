@@ -21,7 +21,8 @@ const getAllFromDB = (0, asyncHandler_1.default)((req, res) => __awaiter(void 0,
     (0, sendResponse_1.default)(res, {
         statusCode: 200,
         message: "User fetched successfully",
-        result: result,
+        meta: result === null || result === void 0 ? void 0 : result.meta,
+        result: result.users,
     });
 }));
 const getUserById = (0, asyncHandler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
@@ -30,14 +31,6 @@ const getUserById = (0, asyncHandler_1.default)((req, res) => __awaiter(void 0, 
     (0, sendResponse_1.default)(res, {
         statusCode: 200,
         message: "User fetched successfully",
-        result: result,
-    });
-}));
-const getInstructors = (0, asyncHandler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const result = yield user_service_1.userServices.getInstructors();
-    (0, sendResponse_1.default)(res, {
-        statusCode: 200,
-        message: "Instructors fetched successfully",
         result: result,
     });
 }));
@@ -69,7 +62,6 @@ const getMyProfile = (0, asyncHandler_1.default)((req, res) => __awaiter(void 0,
     });
 }));
 exports.userController = {
-    getInstructors,
     getAllFromDB,
     getUserById,
     updateDoc,

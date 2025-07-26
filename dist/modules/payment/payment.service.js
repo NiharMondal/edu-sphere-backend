@@ -128,11 +128,18 @@ const createIntoDB = (body, sig) => __awaiter(void 0, void 0, void 0, function* 
     }
 });
 const getAllFromDB = (query) => __awaiter(void 0, void 0, void 0, function* () {
-    const data = new QueryBuilder_1.default(payment_model_1.PaymentHistory.find(), query).sort();
-    const paymentHistory = yield data.queryModel
-        .populate({ path: "student", select: "name" })
-        .populate({ path: "course", select: "title" })
-        .select("paymentIntentId student course amount");
-    return paymentHistory;
+    const queryBuilder = new QueryBuilder_1.default(payment_model_1.PaymentHistory.find(), query)
+        .search(["paymentIntentId"])
+        .filter()
+        .pagination()
+        .sort()
+        .fields()
+        .populate([
+        { path: "student", select: "name" },
+        { path: "course", select: "title" },
+    ]);
+    const paymentHistory = yield queryBuilder.getQuery();
+    const meta = yield queryBuilder.countTotal();
+    return { meta, paymentHistory };
 });
 exports.paymentServices = { createIntoDB, getAllFromDB };
