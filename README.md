@@ -1,88 +1,132 @@
-# Minimal LMS Backend
+# 📚 Edu Sphere Backend (E-Learning )Platform
 
-## Overview
-
-The **Minimal LMS Backend** is the server-side implementation of a Learning Management System (LMS). It follows the **MVC architecture** and provides API endpoints for managing courses, modules, lectures, and user progress.
-
-## Tech Stack
-
--   **Framework**: Express.js (TypeScript)
--   **Database**: MongoDB (Mongoose ODM)
--   **Authentication**: JWT (JSON Web Token)
--   **File Storage**: Cloudinary (for images and PDFs) _(Optional)_
--   **Validation**: Express Validator
+A full-featured online learning platform built using **Node.js**, **Express.js**, **MongoDB**, and **Mongoose**. It supports student enrollment, instructor course management, admin control panel, Stripe payment integration and **live notifications**.
 
 ---
 
-## Features
+## 🚀 Features
 
-### **1. Course Management**
+### 🔐 Role-Based Access Control
 
--   **CRUD Operations**: Create, Read, Update, Delete courses.
--   **Course Fields**:
-    -   Thumbnail (Image)
-    -   Title
-    -   Price
-    -   Description
--   **Dynamic Routing**: Access course details via dynamic routes.
+-   **Student**: Can browse courses, purchase them, and track learning progress.
+-   **Instructor**: Can manage modules and lectures within their assigned courses.
+-   **Admin**: Has full access to manage users, assign instructors, and create/edit courses, modules, and lectures.
 
-### **2. Module & Lecture Management**
+### 🎓 Course Management
 
--   **Module Operations**:
-    -   Create modules with Title and Module Number (auto-incremented).
-    -   Assign modules to a specific course.
--   **Lecture Operations**:
-    -   Add lectures with:
-        -   Title
-        -   Embedded YouTube video links (for simplicity)
-        -   Multiple PDF notes (uploaded)
-    -   CRUD operations for modules and lectures.
+-   Create and manage multiple courses under categories.
+-   Each course contains:
+    -   Multiple modules
+    -   Each module includes several lectures (text, video, etc.)
 
-### **3. User Progress Tracking**
+### 💳 Secure Payment Integration
 
--   Users unlock lectures **sequentially**.
--   Progress is **saved and updated** dynamically.
--   Users can mark lectures as **completed**.
+-   **Stripe** used for secure, real-time course payments.
+-   Webhook-based post-payment enrollment and notification system.
 
-### **4. Authentication & Authorization**
+### 📊 Student Progress Tracking
 
--   **Admin Authentication**:
-    -   Login/Signup using JWT tokens.
-    -   Protected routes for course management.
--   **User Authentication**:
-    -   Secure user login/signup.
-    -   Access control for viewing lectures.
+-   Students can view and track lecture completion status.
+-   Lectures unlock sequentially or based on progress logic.
 
 ---
 
-## Installation & Setup
+## 🧠 Technologies Used
 
-### **1. Clone the Repository**
+| Tech           | Description           |
+| -------------- | --------------------- |
+| **Node.js**    | JavaScript runtime    |
+| **Express.js** | Backend framework     |
+| **MongoDB**    | NoSQL database        |
+| **Mongoose**   | MongoDB ODM           |
+| **Stripe**     | Payment processing    |
+| **JWT**        | Secure authentication |
+| **Bcrypt**     | Password hashing      |
+| **Cloudinary** | Media/image upload    |
 
-```sh
-    git clone https://github.com/NiharMondal/lms-backend
-    cd lms-backend
-```
+---
 
-### **2. Install Dependencies**
+---
+
+## 🔐 Authentication & Authorization
+
+-   **JWT** based login system.
+-   Middleware to protect routes based on user roles.
+-   Login/Register endpoints available for all users.
+
+---
+
+## 🛒 Payment Flow
+
+-   Student selects a course to purchase.
+-   Redirected to Stripe checkout session.
+-   On successful payment, webhook triggers:
+    -   Enrollment creation
+    -   Notification generation
+-   Course access is granted instantly.
+
+---
+
+## 👨‍🏫 User Roles & Permissions
+
+| Role       | Capabilities                                                               |
+| ---------- | -------------------------------------------------------------------------- |
+| Student    | Browse courses, purchase, view progress                                    |
+| Instructor | Manage modules and lectures in assigned courses                            |
+| Admin      | Full access: manage users, courses, assign instructors, update roles, etc. |
+
+---
+
+## 📈 Progress Tracking
+
+-   Students see completed lectures visually.
+-   Backend stores and updates progress after each lecture completion.
+-   Ensures lectures are accessed sequentially.
+
+---
+
+## Database Preview
+
+![Preview](public/preview.png)
+
+## ⚙️ Setup Instructions
+
+### 1. Clone the Repository
 
 ```bash
-    npm install
+git clone https://github.com/NiharMondal/edu-sphere-backend
+cd edu-sphere-backend
 ```
 
-### **3. Configure Environment Variables**
+### 2. Install Dependencies
 
 ```bash
-    MONGO_URI = "your mongodb uri"
-    JWT_SECRET = "jwt_secret"
-    JWT_EXPIRE = "1d"
-    NODE_ENV = "production"
+npm Install
 ```
 
-### **4. Run the Server**
+### 3. Configure Environment Variables
+
+Create a **.env** file in the root directory and add:  
+`NODE_ENV`  
+`FRONT_END_URL` = "http://localhost:3000" //change when it is on production
+`MONGO_URI`  
+`jwt config`  
+`ACCESS_TOKEN_SECRET`  
+`REFRESH_TOKEN_SECRET`  
+`ACCESS_TOKEN_EXPIRE`  
+`REFRESH_TOKEN_EXPIRE`  
+`STRIPE_SECRET_KEY`  
+`STRIPE_WEBHOOK_SECRET`
+
+### 4. Run the Server
 
 ```bash
-    npm run dev
+npm run dev
 ```
 
-The backend will be running on http://localhost:5000.
+## 🙋‍♂️ Author
+
+Nihar Mondal
+
+Feel free to connect or contribute to the project!  
+GitHub: https://github.com/NiharMondal
