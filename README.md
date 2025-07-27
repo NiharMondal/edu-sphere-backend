@@ -1,4 +1,4 @@
-# 📚 Edu Sphere Backend (E-Learning )Platform
+# 📚 Edu Sphere Backend (E-Learning Platform)
 
 A full-featured online learning platform built using **Node.js**, **Express.js**, **MongoDB**, and **Mongoose**. It supports student enrollment, instructor course management, admin control panel, Stripe payment integration and **live notifications**.
 
@@ -101,14 +101,14 @@ cd edu-sphere-backend
 ### 2. Install Dependencies
 
 ```bash
-npm Install
+npm install
 ```
 
 ### 3. Configure Environment Variables
 
 Create a **.env** file in the root directory and add:  
 `NODE_ENV`  
-`FRONT_END_URL` = "http://localhost:3000" //change when it is on production
+`FRONT_END_URL` = "http://localhost:3000" //change when it is on production  
 `MONGO_URI`  
 `jwt config`  
 `ACCESS_TOKEN_SECRET`  
