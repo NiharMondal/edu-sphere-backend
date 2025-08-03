@@ -6,4 +6,5 @@ export interface IReview {
 	rating: number;
 	message: string;
 	isAccepted: boolean;
+	isDeleted: boolean;
 }

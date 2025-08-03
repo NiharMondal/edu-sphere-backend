@@ -16,5 +16,16 @@ const createReview = z.object({
 		.max(5, { message: "Max value is 5" }),
 	message: z.string({ required_error: "Review message is required" }).trim(),
 });
+export const updateReview = z.object({
+	rating: z
+		.number()
+		.min(1, { message: "Min rating value is 1" })
+		.max(5, { message: "Max rating value is 5" })
+		.optional(),
+	message: z
+		.string({ required_error: "Message is required" })
+		.nonempty({ message: "Message can not be empty" })
+		.optional(),
+});
 
-export const reviewValidation = { createReview };
+export const reviewValidation = { createReview, updateReview };

@@ -24,6 +24,16 @@ const getAllFromDB = asyncHandler(async (req: Request, res: Response) => {
 		meta: data?.meta,
 	});
 });
+const getById = asyncHandler(async (req: Request, res: Response) => {
+	const id = req.params.id;
+	const data = await reviewServices.getById(id);
+
+	sendResponse(res, {
+		statusCode: 200,
+		message: "Review fetched successfully",
+		result: data,
+	});
+});
 const getByCourseId = asyncHandler(async (req: Request, res: Response) => {
 	const courseId = req.params.courseId;
 	const data = await reviewServices.getByCourseId(courseId);
@@ -50,7 +60,7 @@ const deleteDoc = asyncHandler(async (req: Request, res: Response) => {
 
 	sendResponse(res, {
 		statusCode: 200,
-		message: "Review accepted successfully",
+		message: "Review deleted successfully",
 		result: data,
 	});
 });
@@ -76,6 +86,7 @@ const undoAccept = asyncHandler(async (req: Request, res: Response) => {
 export const reviewController = {
 	createIntoDB,
 	getAllFromDB,
+	getById,
 	getByCourseId,
 	acceptReview,
 	deleteDoc,

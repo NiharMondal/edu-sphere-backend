@@ -74,7 +74,7 @@ const createIntoDB = async (payload: IReview) => {
 };
 
 const getAllFromDB = async (query: TQuery) => {
-	const res = new QueryBuilder(Review.find(), query)
+	const res = new QueryBuilder(Review.find({ isDeleted: false }), query)
 		.search(["message"])
 		.filter()
 		.pagination()
@@ -115,32 +115,77 @@ const updateDoc = async (
 	id: string,
 	payload: Pick<IReview, "rating" | "message">
 ) => {
-	const review = await Review.findById(id);
+	const review = await Review.findById({
+		_id: id,
+	});
 
 	if (!review) {
 		throw new CustomError(404, "Review not found");
 	}
 
-	const updatedData = await Review.findByIdAndUpdate(
-		id,
-		{
-			$set: {
-				...payload,
-			},
-		},
-		{ new: true, runValidators: true }
-	);
+	const session = await mongoose.startSession();
+	session.startTransaction();
 
-	return updatedData;
+	try {
+		const updatedReview = await Review.findOneAndUpdate(
+			{ _id: id, student: review.student, course: review.course },
+			{
+				$set: {
+					rating: payload.rating,
+					message: payload.message,
+				},
+			},
+			{ new: true }
+		).session(session); // 1st:  step to update review collection
+
+		// find all given Review to this course;
+		const countReview = await Review.find({
+			course: review.course,
+		}).session(session); //2nd : find all reviews under the course ID
+
+		const totalRating = countReview.reduce(
+			(acc, curr) => acc + curr.rating,
+			0
+		);
+
+		//calculating avg rating
+		const avgRating = Math.round(totalRating / countReview.length);
+
+		// updating course rating field
+		await Course.findByIdAndUpdate(
+			{ _id: review.course },
+			{
+				$set: {
+					rating: avgRating,
+				},
+			},
+			{ new: true }
+		).session(session); // 3rd: updating course rating field
+
+		await session.commitTransaction();
+		await session.endSession();
+
+		return updatedReview;
+	} catch (error) {
+		console.log(error);
+		await session.abortTransaction();
+		await session.endSession();
+	}
 };
 
 const deleteDoc = async (id: string) => {
-	const deletedData = await Review.findByIdAndDelete(id);
+	const review = await Review.findById(id);
 
-	if (!deletedData) {
-		throw new CustomError(404, "Review is not deleted");
+	if (!review) {
+		throw new CustomError(404, "Review not found!");
 	}
-	return deletedData;
+	const updatedReview = await Review.findByIdAndUpdate(
+		id,
+		{ isDeleted: true },
+		{ new: true }
+	);
+
+	return updatedReview;
 };
 const acceptReview = async (id: string) => {
 	const updatedData = await Review.findByIdAndUpdate(

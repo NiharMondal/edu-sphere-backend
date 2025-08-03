@@ -42,7 +42,6 @@ const courseSchema = new mongoose_1.Schema({
     },
     rating: {
         type: Number,
-        default: null,
     },
     isDeleted: {
         type: Boolean,

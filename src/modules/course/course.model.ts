@@ -42,7 +42,6 @@ const courseSchema = new Schema<ICourse>(
 		},
 		rating: {
 			type: Number,
-			default: null,
 		},
 		isDeleted: {
 			type: Boolean,

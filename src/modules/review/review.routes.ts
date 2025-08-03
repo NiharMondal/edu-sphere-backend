@@ -20,7 +20,15 @@ router.patch(
 	reviewController.acceptReview
 );
 
-router.route("/:id");
+router
+	.route("/:id")
+	.get(reviewController.getById)
+	.patch(
+		authGuard(ROLE.admin, ROLE.student),
+		validateRequest(reviewValidation.updateReview),
+		reviewController.updateDoc
+	)
+	.delete(authGuard(ROLE.student, ROLE.admin), reviewController.deleteDoc);
 router
 	.route("/")
 	.post(

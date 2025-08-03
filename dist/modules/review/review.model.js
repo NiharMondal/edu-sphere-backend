@@ -21,6 +21,10 @@ const reviewSchema = new mongoose_1.Schema({
         type: String,
         required: [true, "Message is required"],
     },
+    isDeleted: {
+        type: Boolean,
+        default: false,
+    },
     isAccepted: {
         type: Boolean,
         default: false,

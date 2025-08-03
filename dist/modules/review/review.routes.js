@@ -11,7 +11,11 @@ const router = (0, express_1.Router)();
 router.get("/:courseId/course-review", review_controller_1.reviewController.getByCourseId);
 router.patch("/:id/undo-accept", (0, authGuard_1.authGuard)(constant_1.ROLE.admin), review_controller_1.reviewController.undoAccept);
 router.patch("/:id/accept", (0, authGuard_1.authGuard)(constant_1.ROLE.admin), review_controller_1.reviewController.acceptReview);
-router.route("/:id");
+router
+    .route("/:id")
+    .get(review_controller_1.reviewController.getById)
+    .patch((0, authGuard_1.authGuard)(constant_1.ROLE.admin, constant_1.ROLE.student), (0, validateRequest_1.validateRequest)(review_validation_1.reviewValidation.updateReview), review_controller_1.reviewController.updateDoc)
+    .delete((0, authGuard_1.authGuard)(constant_1.ROLE.student, constant_1.ROLE.admin), review_controller_1.reviewController.deleteDoc);
 router
     .route("/")
     .post((0, validateRequest_1.validateRequest)(review_validation_1.reviewValidation.createReview), review_controller_1.reviewController.createIntoDB)

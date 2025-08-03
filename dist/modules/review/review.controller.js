@@ -33,6 +33,15 @@ const getAllFromDB = (0, asyncHandler_1.default)((req, res) => __awaiter(void 0,
         meta: data === null || data === void 0 ? void 0 : data.meta,
     });
 }));
+const getById = (0, asyncHandler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const id = req.params.id;
+    const data = yield review_service_1.reviewServices.getById(id);
+    (0, sendResponse_1.default)(res, {
+        statusCode: 200,
+        message: "Review fetched successfully",
+        result: data,
+    });
+}));
 const getByCourseId = (0, asyncHandler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const courseId = req.params.courseId;
     const data = yield review_service_1.reviewServices.getByCourseId(courseId);
@@ -54,7 +63,7 @@ const deleteDoc = (0, asyncHandler_1.default)((req, res) => __awaiter(void 0, vo
     const data = yield review_service_1.reviewServices.deleteDoc(req.params.id);
     (0, sendResponse_1.default)(res, {
         statusCode: 200,
-        message: "Review accepted successfully",
+        message: "Review deleted successfully",
         result: data,
     });
 }));
@@ -77,6 +86,7 @@ const undoAccept = (0, asyncHandler_1.default)((req, res) => __awaiter(void 0, v
 exports.reviewController = {
     createIntoDB,
     getAllFromDB,
+    getById,
     getByCourseId,
     acceptReview,
     deleteDoc,

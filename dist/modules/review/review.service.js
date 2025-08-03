@@ -68,7 +68,7 @@ const createIntoDB = (payload) => __awaiter(void 0, void 0, void 0, function* ()
     }
 });
 const getAllFromDB = (query) => __awaiter(void 0, void 0, void 0, function* () {
-    const res = new QueryBuilder_1.default(review_model_1.Review.find(), query)
+    const res = new QueryBuilder_1.default(review_model_1.Review.find({ isDeleted: false }), query)
         .search(["message"])
         .filter()
         .pagination()
@@ -99,21 +99,51 @@ const getByCourseId = (courseId) => __awaiter(void 0, void 0, void 0, function* 
     return review;
 });
 const updateDoc = (id, payload) => __awaiter(void 0, void 0, void 0, function* () {
-    const review = yield review_model_1.Review.findById(id);
+    const review = yield review_model_1.Review.findById({
+        _id: id,
+    });
     if (!review) {
         throw new CustomError_1.default(404, "Review not found");
     }
-    const updatedData = yield review_model_1.Review.findByIdAndUpdate(id, {
-        $set: Object.assign({}, payload),
-    }, { new: true, runValidators: true });
-    return updatedData;
+    const session = yield mongoose_1.default.startSession();
+    session.startTransaction();
+    try {
+        const updatedReview = yield review_model_1.Review.findOneAndUpdate({ _id: id, student: review.student, course: review.course }, {
+            $set: {
+                rating: payload.rating,
+                message: payload.message,
+            },
+        }, { new: true }).session(session); // 1st:  step to update review collection
+        // find all given Review to this course;
+        const countReview = yield review_model_1.Review.find({
+            course: review.course,
+        }).session(session); //2nd : find all reviews under the course ID
+        const totalRating = countReview.reduce((acc, curr) => acc + curr.rating, 0);
+        //calculating avg rating
+        const avgRating = Math.round(totalRating / countReview.length);
+        // updating course rating field
+        yield course_model_1.Course.findByIdAndUpdate({ _id: review.course }, {
+            $set: {
+                rating: avgRating,
+            },
+        }, { new: true }).session(session); // 3rd: updating course rating field
+        yield session.commitTransaction();
+        yield session.endSession();
+        return updatedReview;
+    }
+    catch (error) {
+        console.log(error);
+        yield session.abortTransaction();
+        yield session.endSession();
+    }
 });
 const deleteDoc = (id) => __awaiter(void 0, void 0, void 0, function* () {
-    const deletedData = yield review_model_1.Review.findByIdAndDelete(id);
-    if (!deletedData) {
-        throw new CustomError_1.default(404, "Review is not deleted");
+    const review = yield review_model_1.Review.findById(id);
+    if (!review) {
+        throw new CustomError_1.default(404, "Review not found!");
     }
-    return deletedData;
+    const updatedReview = yield review_model_1.Review.findByIdAndUpdate(id, { isDeleted: true }, { new: true });
+    return updatedReview;
 });
 const acceptReview = (id) => __awaiter(void 0, void 0, void 0, function* () {
     const updatedData = yield review_model_1.Review.findByIdAndUpdate({ _id: id }, { isAccepted: true }, { new: true });
